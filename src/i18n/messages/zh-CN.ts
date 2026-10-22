@@ -18,6 +18,7 @@ const zhCN = {
   "nav.wca.statistics": "统计榜单",
   "nav.wca.proportion": "比例拟合",
   "nav.tools": "工具",
+  "nav.tools.timer": "魔方计时器",
   "nav.tools.teamMatch": "团体赛对阵",
   "nav.tools.draw": "绘图工具",
   "nav.tools.sq1": "SQ1 绘图",
