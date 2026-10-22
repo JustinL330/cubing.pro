@@ -23,6 +23,7 @@ export interface AppRoute {
 }
 
 export const APP_ROUTES: AppRoute[] = [
+  { id: "timer", name: "Practice timer", pattern: "/timer", implType: "frontend-only", renderMode: "client-spa", pageComponent: "Practice/Timer.tsx" },
   { id: "welcome", name: "欢迎页", pattern: "/welcome", implType: "hybrid", renderMode: "client-spa", pageComponent: "Welcome.tsx" },
   { id: "buy-coffee", name: "赞助", pattern: "/buy-coffee", implType: "frontend-only", renderMode: "client-spa", pageComponent: "BuyCoffee/index.tsx" },
   { id: "changelog", name: "更新日志", pattern: "/changelog", implType: "frontend-only", renderMode: "static-first", pageComponent: "Changelog/index.tsx" },

@@ -4,6 +4,7 @@ import { wcaMessagesEnUS } from "./wca-en-US";
 const enUS: Record<MessageKey, string> = {
   "app.name": "Cubing Pro",
   "app.version": "v4.0.0",
+  "nav.timer": "Practice timer",
   "nav.home": "Home",
   "nav.algs": "Algorithms",
   "nav.groupCompetitions": "Group comps",

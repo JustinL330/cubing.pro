@@ -15,6 +15,7 @@ export interface NavGroupDef {
 
 export const MAIN_NAV: NavGroupDef[] = [
   { id: "welcome", labelKey: "nav.home", href: "/welcome" },
+  { id: "timer", labelKey: "nav.timer", href: "/timer" },
   { id: "algs", labelKey: "nav.algs", href: "/algs" },
   {
     id: "group-competitions",

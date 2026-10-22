@@ -38,12 +38,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     writeStoredLocale(next);
     setLocaleState(next);
     if (typeof document !== "undefined") {
-      document.documentElement.lang = next === "en-US" ? "en" : "zh-CN";
+      document.documentElement.lang = next;
     }
   }, []);
 
   useEffect(() => {
-    document.documentElement.lang = locale === "en-US" ? "en" : "zh-CN";
+    document.documentElement.lang = locale;
   }, [locale]);
 
   const t = useCallback(

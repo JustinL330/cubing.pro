@@ -1,0 +1,26 @@
+.page { max-width: 1100px; margin: 0 auto; padding: clamp(16px, 3vw, 36px) 0; color: var(--foreground); }
+.hero { padding: clamp(24px, 5vw, 56px); border: 1px solid var(--border-default); border-radius: 24px; background: linear-gradient(135deg, var(--card), var(--accent-soft)); margin-bottom: 24px; }
+.eyebrow { color: var(--accent); font-size: 12px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+.title { font-size: clamp(28px, 4.5vw, 48px); font-weight: 750; letter-spacing: -.04em; line-height: 1.15; margin: 12px 0; }
+.muted { color: var(--muted-foreground); font-size: 14px; line-height: 1.7; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 16px; }
+.card { padding: 24px; background: var(--card); border: 1px solid var(--border-default); border-radius: 18px; min-width: 0; }
+.link { display: block; transition: border-color .15s; text-decoration: none; }
+.link:hover { border-color: var(--accent); }
+.heading { font-size: 20px; font-weight: 700; margin: 8px 0; }
+.row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+.button, .select { border: 1px solid var(--border-default); border-radius: 10px; padding: 9px 13px; font: inherit; color: var(--foreground); background: var(--card); max-width: 100%; }
+.button { cursor: pointer; font-size: 14px; }
+.button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.button:disabled { opacity: .5; cursor: not-allowed; }
+.button:focus-visible, .select:focus-visible, .link:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.primary { background: var(--accent); color: var(--accent-foreground); }
+.scramble { font: 500 clamp(18px, 2.6vw, 26px)/1.8 monospace; overflow-wrap: anywhere; padding: 24px; border-radius: 14px; background: var(--muted); min-height: 110px; }
+.clock { display: block; width: 100%; border: 0; border-radius: 18px; padding: 40px 12px; background: var(--card); color: var(--foreground); cursor: pointer; touch-action: manipulation; font: 600 clamp(62px, 12vw, 124px)/1.2 monospace; font-variant-numeric: tabular-nums; }
+.armed { color: var(--signal-success); }
+.stats { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.stat { flex: 1; min-width: 100px; padding: 16px; border-radius: 12px; background: var(--muted); }
+.stat strong { display: block; font-size: 24px; font-variant-numeric: tabular-nums; }
+.history { max-height: 520px; overflow: auto; }
+.solve { border-bottom: 1px solid var(--border-default); padding: 12px 0; }
+.error { color: var(--destructive); white-space: pre-wrap; }

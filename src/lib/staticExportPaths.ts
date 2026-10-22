@@ -20,6 +20,7 @@ function getBuildTimeApiBase(): string {
 /** 已由 app 目录单独实现的页面，不再由 [...path] 预渲染 */
 const DEDICATED_PATHS = new Set([
   "welcome",
+  "timer",
   "login",
   "settings",
   "auth/callback",

@@ -3,6 +3,7 @@ import { wcaMessagesZhCN } from "./wca-zh-CN";
 const zhCN = {
   "app.name": "Cubing Pro",
   "app.version": "v4.0.0",
+  "nav.timer": "练习计时器",
   "nav.home": "首页",
   "nav.algs": "公式库",
   "nav.groupCompetitions": "群赛",

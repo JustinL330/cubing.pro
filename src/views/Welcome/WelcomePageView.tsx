@@ -1,5 +1,7 @@
 "use client";
 
+import { PracticeHub } from "@/views/Practice/PracticeHub";
+
 import { VStack } from "@chakra-ui/react";
 
 import { AdvertisementCarousel } from "@/views/Welcome/AdvertisementCarousel";
@@ -11,6 +13,7 @@ import { ExternalLinksHomeSection } from "@/views/ExternalLinks/ExternalLinksHom
 export function WelcomePageView() {
   return (
     <VStack align="stretch" gap="0">
+      <PracticeHub />
       <ThanksSection />
       <ExternalLinksHomeSection />
       <BuyCoffeeQuickJump />

@@ -98,7 +98,7 @@ const FONT_FAMILY_LABEL_ZH: Record<FormulaFontFamilyId, string> = {
 
 export function getFormulaFontFamilyLabel(
   id: FormulaFontFamilyId,
-  locale: "zh-CN" | "en-US",
+  locale: string,
 ): string {
   if (locale === "zh-CN") {
     return FONT_FAMILY_LABEL_ZH[id] ?? id;
