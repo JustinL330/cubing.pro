@@ -49,3 +49,12 @@ could not be downloaded in the implementation environment.
 - Keep the test-host DEMO title and original-site link visible in a compact banner
   on the timer page. Other pages retain the full deployment notice.
 - Validation: TypeScript, targeted ESLint and existing timer calculation tests pass.
+
+### Browser verification follow-up
+
+- The exported cubing.js scramble worker failed on the demo host. Use a bundled
+  worker with the project's existing csTimer module instead; all 11 supported
+  puzzle mappings generate nonempty scrambles, with solving work off the UI thread.
+- Disable Start until a scramble exists. Retain generation IDs to discard stale
+  results when switching puzzles.
+- Wrap the mobile header so the language selector and menu stay accessible.

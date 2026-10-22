@@ -369,7 +369,7 @@ export function AppHeader() {
         backdropFilter="blur(12px)"
       >
         <Container maxW="container.xl" py="3">
-          <Flex align="center" justify="space-between" gap="2" minW="0">
+          <Flex align="center" justify="space-between" gap="2" minW="0" flexWrap={{ base: "wrap", sm: "nowrap" }}>
             <BrandLogo />
 
             <Box

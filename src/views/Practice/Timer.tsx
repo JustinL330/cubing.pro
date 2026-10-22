@@ -66,10 +66,25 @@ export function Timer() {
         setScramble("");
         setError("");
         try {
-            const { randomScrambleForEvent } = await import("cubing/scramble");
-            const result = await randomScrambleForEvent(puzzle);
+            // A statically discoverable worker URL also works in Next's Pages export.
+            const result = await new Promise<string>((resolve, reject) => {
+                const worker = new Worker(new URL("./scramble.worker.ts", import.meta.url));
+                const timeout = setTimeout(() => { worker.terminate(); reject(new Error("Scramble timeout")); }, 60000);
+                worker.onmessage = ({ data }: MessageEvent<{ scramble?: string; error?: string }>) => {
+                    clearTimeout(timeout);
+                    worker.terminate();
+                    if (data.scramble) resolve(data.scramble);
+                    else reject(new Error(data.error ?? "Scramble failed"));
+                };
+                worker.onerror = () => {
+                    clearTimeout(timeout);
+                    worker.terminate();
+                    reject(new Error("Scramble worker failed"));
+                };
+                worker.postMessage(puzzle);
+            });
             if (id === generation.current)
-                setScramble(result.toString());
+                setScramble(result);
         }
         catch {
             if (id === generation.current)
@@ -175,7 +190,7 @@ export function Timer() {
     </div>
     <p className={css.scramble} data-long-scramble={scramble.length > 200 || undefined} aria-live="polite">{loading ? c.loading : scramble || c.unsupported}</p>
     {error && <p className={css.error} role="alert">{c.unsupported}</p>}
-    <button className={`${css.clock} ${mode === "armed" ? css.armed : ""}`} disabled={loading && !active} aria-label={mode === "running" ? c.stop : c.start} onClick={() => modeRef.current === "running" ? stop() : begin()}>
+    <button className={`${css.clock} ${mode === "armed" ? css.armed : ""}`} disabled={(!scramble || loading) && !active} aria-label={mode === "running" ? c.stop : c.start} onClick={() => modeRef.current === "running" ? stop() : begin()}>
       {mode === "inspection" ? Math.max(0, Math.ceil(15 - elapsed / 1000)) : format(elapsed)}
     </button>
     <p className={css.muted} style={{ textAlign: "center" }} aria-live="polite">{mode === "armed" ? c.armed : mode === "inspection" ? `${c.inspect}${elapsed >= 17000 ? " · DNF" : elapsed >= 15000 ? " · +2" : ""}` : mode === "running" ? c.running : c.ready}</p>
