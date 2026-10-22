@@ -35,3 +35,17 @@ Run `npx tsc --noEmit`, targeted ESLint, and `node --test tests/practice.test.mj
 (Node 22.18+ or 24 supports importing the type-stripped timer model).
 Browser visual and keyboard testing is still required: the local Chromium binary
 could not be downloaded in the implementation environment.
+
+## 2026-10-22 — Korean and fixed timer viewport
+
+- Add 한국어 (ko-KR), Korean browser-language detection, and Korean practice timer copy.
+- Translate navigation, welcome content, algorithms, settings, drawing controls and
+  main WCA player/results labels. Specialized untranslated legacy text continues
+  to use English; this is not a claim of complete Korean coverage.
+- Add a visible language icon inside the existing accessible native language selector.
+- Lock document scrolling only while /timer is mounted; restore scrolling on exit.
+- Fit the timer to the remaining visual viewport and adapt on resize/rotation.
+- Browse session results with previous/next buttons instead of a scrolling list.
+- Keep the test-host DEMO title and original-site link visible in a compact banner
+  on the timer page. Other pages retain the full deployment notice.
+- Validation: TypeScript, targeted ESLint and existing timer calculation tests pass.

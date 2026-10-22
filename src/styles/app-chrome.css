@@ -15,3 +15,10 @@ html[data-app-chrome-hidden] [data-app-container] {
 html[data-app-chrome-hidden] body {
   overflow: hidden;
 }
+
+/* Keep the practice timer in the viewport, including on the demo host. */
+html[data-practice-timer] [data-app-main] { padding-top: 6px; padding-bottom: 0; }
+html[data-practice-timer] aside[aria-label="Unofficial demo notice"] { padding: 5px 12px !important; }
+html[data-practice-timer] aside[aria-label="Unofficial demo notice"] > strong { font-size: 20px !important; }
+html[data-practice-timer] aside[aria-label="Unofficial demo notice"] > p { display: none; }
+html[data-practice-timer] aside[aria-label="Unofficial demo notice"] > a { font-size: 14px !important; padding: 3px 10px !important; }

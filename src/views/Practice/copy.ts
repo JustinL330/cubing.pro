@@ -18,6 +18,14 @@ const ja: Copy = {
 const es: Copy = {
     title: "Haz que cada resolución cuente.", intro: "Practica a tu ritmo, explora algoritmos y mejora tu marca personal.", timer: "Cronómetro", timerInfo: "Mezclas, penalizaciones y medias. Sin cuenta.", learnInfo: "Explora algoritmos y encuentra tu próximo objetivo.", local: "Sesión temporal. Los resultados se pierden al recargar o salir. No se guardan ni se suben datos.", scramble: "Nueva mezcla", loading: "Generando…", ready: "Mantén Espacio; suelta para empezar. Pulsa para parar.", armed: "Listo — suelta para empezar", running: "Resolviendo…", start: "Empezar", stop: "Parar", cancel: "Cancelar (Esc)", reset: "Vaciar sesión", confirm: "¿Eliminar todos los resultados de esta sesión?", best: "Mejor", solves: "Resoluciones", session: "Sesión", inspection: "Inspección de 15 segundos", inspect: "Inspección — pulsa Espacio o toca para empezar", empty: "Empieza tu primera resolución.", remove: "Eliminar", penalty: "Penalización", normal: "Ninguna", event: "Prueba", unsupported: "Mezcla no disponible. Vuelve a intentarlo.",
 };
+const ko: Copy = {
+    title: "한 번의 솔브도 소중하게.", intro: "자신의 속도로 연습하세요. 시간을 재고 공식을 익히며 개인 최고 기록에 도전하세요.",
+    timer: "연습 타이머", timerInfo: "스크램블, 페널티와 평균 기록. 계정이 필요하지 않습니다.", learnInfo: "큐브 공식을 찾아보고 다음 연습 목표를 정하세요.",
+    local: "현재 페이지에서만 사용하는 임시 기록입니다. 새로고침하거나 페이지를 나가면 사라지며, 저장하거나 업로드하지 않습니다.",
+    scramble: "새 스크램블", loading: "스크램블 생성 중…", ready: "스페이스바를 누른 채 준비하고 놓으면 시작합니다. 다시 누르면 멈춥니다.", armed: "준비 완료 — 놓으면 시작", running: "측정 중…",
+    cancel: "취소 (Esc)", start: "시작", stop: "정지", reset: "세션 비우기", confirm: "이 세션의 모든 기록을 삭제할까요?", empty: "첫 번째 솔브를 시작해 보세요.",
+    best: "최고 기록", solves: "횟수", session: "세션", inspection: "15초 인스펙션", inspect: "인스펙션 중 — 스페이스바 또는 터치로 시작", remove: "삭제", penalty: "페널티", normal: "없음", event: "종목", unsupported: "스크램블을 생성할 수 없습니다. 다시 시도해 주세요.",
+};
 export function practiceCopy(locale: Locale): Copy {
-    return ({ "en-US": en, "zh-CN": zhCN, "zh-TW": zhTW, "ja-JP": ja, "es-ES": es })[locale];
+    return ({ "en-US": en, "zh-CN": zhCN, "zh-TW": zhTW, "ja-JP": ja, "es-ES": es, "ko-KR": ko })[locale];
 }

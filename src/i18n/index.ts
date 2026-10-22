@@ -1,8 +1,9 @@
 import { extraCatalogs } from "./extra-catalogs";
 import enUS from "@/i18n/messages/en-US";
+import koKR from "@/i18n/messages/ko-KR";
 import zhCN, { type MessageKey } from "@/i18n/messages/zh-CN";
 
-export type Locale = "zh-CN" | "zh-TW" | "en-US" | "ja-JP" | "es-ES";
+export type Locale = "zh-CN" | "zh-TW" | "en-US" | "ja-JP" | "es-ES" | "ko-KR";
 
 export const LOCALE_STORAGE_KEY = "cubing_pro_locale";
 
@@ -16,6 +17,7 @@ export const SUPPORTED_LOCALES: {
   { key: "en-US", labelKey: "lang.en", flag: "us", name: "English" },
   { key: "zh-TW", labelKey: "lang.label", flag: "tw", name: "繁體中文" },
   { key: "ja-JP", labelKey: "lang.label", flag: "jp", name: "日本語" },
+  { key: "ko-KR", labelKey: "lang.label", flag: "kr", name: "한국어" },
   { key: "es-ES", labelKey: "lang.label", flag: "es", name: "Español" },
 ];
 
@@ -25,6 +27,7 @@ const catalogs: Record<Locale, Record<MessageKey, string>> = {
   "zh-TW": { ...enUS, ...extraCatalogs["zh-TW"] },
   "ja-JP": { ...enUS, ...extraCatalogs["ja-JP"] },
   "es-ES": { ...enUS, ...extraCatalogs["es-ES"] },
+  "ko-KR": { ...enUS, ...koKR },
 };
 
 export function translate(locale: Locale, key: MessageKey): string {
@@ -53,6 +56,7 @@ export function readStoredLocale(): Locale {
   if (/^zh-(tw|hk|mo|hant)/.test(language)) return "zh-TW";
   if (language.startsWith("zh")) return "zh-CN";
   if (language.startsWith("ja")) return "ja-JP";
+  if (language.startsWith("ko")) return "ko-KR";
   if (language.startsWith("es")) return "es-ES";
   return "en-US";
 }

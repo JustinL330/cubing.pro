@@ -24,3 +24,49 @@
 .history { max-height: 520px; overflow: auto; }
 .solve { border-bottom: 1px solid var(--border-default); padding: 12px 0; }
 .error { color: var(--destructive); white-space: pre-wrap; }
+.timerPage { height: var(--timer-height, 75dvh); min-height: 0; overflow: hidden; overscroll-behavior: none; color: var(--foreground); display: flex; flex-direction: column; gap: 8px; }
+.timerHeading { flex: 0 0 auto; }
+.timerHeading .heading { margin: 0; }
+.timerHeading .muted { font-size: 12px; line-height: 1.4; margin-top: 3px; }
+.timerWorkspace { display: grid; grid-template-columns: minmax(0, 2fr) minmax(240px, 1fr); gap: 18px; flex: 1; min-height: 0; overflow: hidden; }
+.timerMain { display: flex; flex-direction: column; min-height: 0; min-width: 0; gap: 6px; }
+.timerPage .row { margin: 0; gap: 6px; }
+.timerPage .button, .timerPage .select { padding: 5px 8px; font-size: 13px; }
+.timerMain > .row { flex: 0 0 auto; }
+.timerMain .scramble { min-height: 0; padding: 10px 14px; font-size: clamp(13px, 1.7vw, 22px); line-height: 1.5; flex: 0 1 auto; }
+.timerMain .scramble[data-long-scramble] { font-size: clamp(10px, 1.15vw, 16px); line-height: 1.4; }
+.timerMain .clock { flex: 1; min-height: 56px; padding: 4px; font-size: clamp(48px, min(11vw, 16dvh), 124px); }
+.timerMain > .muted { flex: 0 0 auto; font-size: 12px; line-height: 1.4; }
+.timerSide { min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.timerPage .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; gap: 6px; }
+.timerPage .stat { min-width: 0; padding: 10px; }
+.timerPage .stat strong { font-size: 20px; }
+.timerHistory { min-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 8px; }
+.timerResult { min-height: 0; overflow: hidden; border: 1px solid var(--border-default); border-radius: 12px; padding: 10px; background: var(--card); }
+.timerResult .solve { padding: 0; border: 0; }
+.resultScramble { overflow-wrap: anywhere; font: 11px/1.4 monospace; margin-top: 6px; }
+@media (max-width: 700px) {
+  .timerWorkspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; gap: 6px; }
+  .timerPage .heading { font-size: 16px; }
+  .timerHeading .muted { font-size: 10px; }
+  .timerPage .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .timerPage .stat { padding: 4px 6px; }
+  .timerPage .stat .muted { font-size: 10px; }
+  .timerPage .stat strong { font-size: 16px; }
+  .timerHistory { gap: 4px; }
+  .timerResult { padding: 6px; }
+  .timerResult time, .resultScramble { display: none; }
+  .timerMain .scramble { padding: 6px; font-size: 13px; }
+  .timerMain .scramble[data-long-scramble] { font-size: 10px; }
+  .timerMain > .muted { font-size: 10px; }
+}
+@media (max-height: 550px) {
+  .timerHeading .muted { display: none; }
+  .timerPage { gap: 3px; }
+  .timerPage .heading { font-size: 15px; }
+  .timerPage .button, .timerPage .select { padding: 2px 5px; font-size: 11px; }
+  .timerMain .scramble { font-size: 11px; padding: 4px; }
+  .timerMain .scramble[data-long-scramble] { font-size: 9px; }
+  .timerMain > .muted { font-size: 10px; }
+  .timerMain .clock { min-height: 40px; font-size: 48px; }
+}
