@@ -19,6 +19,7 @@ const enUS: Record<MessageKey, string> = {
   "nav.wca.statistics": "Statistics",
   "nav.wca.proportion": "Proportion fit",
   "nav.tools": "Tools",
+  "nav.tools.timer": "Cube timer",
   "nav.tools.teamMatch": "Team match",
   "nav.tools.draw": "Drawing tools",
   "nav.tools.sq1": "SQ1 drawing",
