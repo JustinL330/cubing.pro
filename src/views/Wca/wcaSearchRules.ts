@@ -55,7 +55,7 @@ export function getWcaSearchCountryLabel(
   locale: string,
 ): string {
   const code = iso2?.trim().toUpperCase() ?? "";
-  if (/^[A-Z]{2}$/.test(code)) {
+  if (/^[A-Z]{2}$/.test(code) && code !== "ZZ") {
     try {
       const label = new Intl.DisplayNames([locale], { type: "region" }).of(code);
       if (label && label !== code) return label;
