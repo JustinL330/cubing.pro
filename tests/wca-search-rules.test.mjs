@@ -7,6 +7,7 @@ import {
   getVisibleWcaSearchResults,
   getWcaSearchCountries,
   getWcaSearchCountryKey,
+  getWcaSearchCountryLabel,
   getWcaSearchResultPolicy,
 } from "../src/views/Wca/wcaSearchRules.ts";
 
@@ -44,4 +45,11 @@ test("country selection filters only returned players", () => {
 test("fallback to WCA country identifier when ISO2 is absent", () => {
   assert.equal(getWcaSearchCountryKey({ country_id: " China " }), "CHINA");
   assert.equal(getWcaSearchCountryKey({ country_id: "China", iso2: " cn " }), "CN");
+});
+
+test("country labels use active interface language with safe fallback", () => {
+  assert.equal(getWcaSearchCountryLabel("US", "USA", "en-US"), "United States");
+  assert.equal(getWcaSearchCountryLabel("JP", "Japan", "ja-JP"), "日本");
+  assert.equal(getWcaSearchCountryLabel(undefined, "China", "en-US"), "China");
+  assert.equal(getWcaSearchCountryLabel("ZZ", "Unknown region", "en-US"), "Unknown region");
 });
