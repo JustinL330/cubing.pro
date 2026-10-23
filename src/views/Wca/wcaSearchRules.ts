@@ -43,3 +43,25 @@ export function getVisibleWcaSearchResults(
   if (policy === "confirm" && !showAll) return players.slice(0, WCA_SEARCH_PREVIEW_LIMIT);
   return [...players];
 }
+
+/**
+ * Prefer the active UI language for ISO2 country names. Unlike the legacy
+ * country-name helper, this does not force Chinese labels in English/Japanese
+ * and other non-Chinese interfaces. Unknown WCA country IDs remain readable.
+ */
+export function getWcaSearchCountryLabel(
+  iso2: string | undefined | null,
+  countryId: string | undefined | null,
+  locale: string,
+): string {
+  const code = iso2?.trim().toUpperCase() ?? "";
+  if (/^[A-Z]{2}$/.test(code)) {
+    try {
+      const label = new Intl.DisplayNames([locale], { type: "region" }).of(code);
+      if (label && label !== code) return label;
+    } catch {
+      // Intl.DisplayNames may not be available in older browsers.
+    }
+  }
+  return countryId?.trim() || code || "";
+}
