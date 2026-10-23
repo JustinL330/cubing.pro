@@ -208,8 +208,8 @@ export function WcaPlayersSearchView() {
         <div style={{ marginTop: 24, width: "100%" }}>
           <Select
             value={countryKey || undefined}
-            onChange={(value: string) => {
-              setCountryKey(value);
+            onChange={(value: string | undefined) => {
+              setCountryKey(value ?? "");
               setShowAll(false);
             }}
             allowClear
