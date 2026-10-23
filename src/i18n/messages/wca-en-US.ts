@@ -1,4 +1,12 @@
 export const wcaMessagesEnUS = {
+  "wca.players.regionFilter": "Filter returned players by country/region",
+  "wca.players.regionFilterHint": "Only filters players returned by this name/WCA ID query, not the full WCA database.",
+  "wca.players.noRegionMatches": "No returned players match this country/region.",
+  "wca.players.narrowResults": "{count} results. Please narrow your query or select a country/region.",
+  "wca.players.confirmResults": "{count} results. Showing the first 20. Show all?",
+  "wca.players.showAllResults": "Show all",
+  "wca.players.showingResults": "Showing {shown} of {count} results",
+  "wca.players.noMatches": "No matching players found.",
   "wca.players.title": "WCA Player Search",
   "wca.players.placeholder": "Enter WCA ID or name",
   "wca.players.errorMaxLength": "Input cannot exceed 32 characters",
