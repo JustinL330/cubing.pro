@@ -1,4 +1,12 @@
 export const wcaMessagesZhCN = {
+  "wca.players.regionFilter": "按国家／地区筛选已返回的选手",
+  "wca.players.regionFilterHint": "仅筛选本次姓名或 WCA ID 查询返回的数据，不会搜索整个 WCA 数据库。",
+  "wca.players.noRegionMatches": "返回的选手中没有符合该国家／地区的结果。",
+  "wca.players.narrowResults": "找到 {count} 条结果，请缩小搜索范围或选择国家／地区。",
+  "wca.players.confirmResults": "找到 {count} 条结果，先显示前 20 条。是否展开全部？",
+  "wca.players.showAllResults": "显示全部",
+  "wca.players.showingResults": "显示 {shown} / {count} 条结果",
+  "wca.players.noMatches": "没有找到符合条件的选手。",
   "wca.players.title": "WCA 选手查询",
   "wca.players.placeholder": "输入WCAID或名字",
   "wca.players.errorMaxLength": "输入内容不能超过32个字符",

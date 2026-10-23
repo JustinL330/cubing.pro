@@ -2,12 +2,19 @@
 
 import "antd/dist/reset.css";
 
-import { Alert, Input, Spin, Table, Typography } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { Alert, Button, Input, Select, Spin, Table, Typography } from "antd";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { WCALink, WCALinkWithCnName } from "@/components/Link/WcaLinks";
 import { useI18n } from "@/contexts/I18nProvider";
-import { getCountryNameByIso2 } from "@/views/Wca/PlayerComponents/region/all_contiry";
+import { getCountryDisplayName } from "@/views/Wca/PlayerComponents/region/all_contiry";
+import {
+  filterWcaSearchResults,
+  getVisibleWcaSearchResults,
+  getWcaSearchCountries,
+  getWcaSearchCountryLabel,
+  getWcaSearchResultPolicy,
+} from "@/views/Wca/wcaSearchRules";
 import { getWCAPersons } from "@/services/cubing-pro/wca/player";
 import type { WCAPerson } from "@/services/cubing-pro/wca/types";
 
@@ -35,61 +42,74 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function WcaPlayersSearchView() {
-  const { t } = useI18n();
+  const { t, tf, locale } = useI18n();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WCAPerson[]>([]);
+  const [countryKey, setCountryKey] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
+    const requestId = ++requestIdRef.current;
     const trimmed = query.trim();
 
-    if (trimmed === "") {
-      setResults((prev) => (prev.length === 0 ? prev : []));
-      setError((prev) => (prev === null ? prev : null));
+    setResults([]);
+    setHasSearched(false);
+    setError(null);
+
+    if (!trimmed) {
+      setLoading(false);
       return;
     }
-
-    if (trimmed.length > 32) {
+    // The existing API client rejects inputs of 32 characters or longer.
+    if (trimmed.length >= 32) {
+      setLoading(false);
       setError(t("wca.players.errorMaxLength"));
-      setResults((prev) => (prev.length === 0 ? prev : []));
       return;
     }
 
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    debounceRef.current = setTimeout(async () => {
-      setError(null);
-      setLoading(true);
+    setLoading(true);
+    const timeout = setTimeout(async () => {
       try {
         const data = await getWCAPersons(trimmed);
-
+        if (requestId !== requestIdRef.current) return;
         if (isValidWCAPersonArray(data)) {
           setResults(data);
         } else {
-          setResults([]);
           setError(t("wca.players.errorFormat"));
         }
       } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : t("wca.players.errorNetwork");
-        setError(message);
-        setResults([]);
+        if (requestId !== requestIdRef.current) return;
+        setError(err instanceof Error ? err.message : t("wca.players.errorNetwork"));
       } finally {
-        setLoading(false);
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+          setHasSearched(true);
+        }
       }
     }, 400);
 
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      clearTimeout(timeout);
+      requestIdRef.current += 1;
     };
   }, [query, t]);
+
+  const countryKeys = useMemo(() => getWcaSearchCountries(results), [results]);
+  const filtered = useMemo(
+    () => filterWcaSearchResults(results, countryKey),
+    [results, countryKey],
+  );
+  const policy = getWcaSearchResultPolicy(filtered.length);
+  const visible = getVisibleWcaSearchResults(filtered, showAll);
+
+  const countryLabel = (iso2: string | undefined, countryId?: string) =>
+    locale.startsWith("zh")
+      ? getCountryDisplayName(iso2 || countryId, countryId)
+      : getWcaSearchCountryLabel(iso2, countryId, locale);
 
   const columns = [
     {
@@ -103,9 +123,9 @@ export function WcaPlayersSearchView() {
       title: t("wca.players.country"),
       dataIndex: "iso2",
       key: "iso2",
-      width: 120,
+      width: 150,
       render: (text: string, record: WCAPerson) => (
-        <>{getCountryNameByIso2(text || record.country_id)}</>
+        <>{countryLabel(text, record.country_id)}</>
       ),
     },
     {
@@ -122,12 +142,8 @@ export function WcaPlayersSearchView() {
       key: "gender",
       width: 120,
       render: (gender: string) => {
-        if (gender === "m") {
-          return t("wca.players.genderMale");
-        }
-        if (gender === "f") {
-          return t("wca.players.genderFemale");
-        }
+        if (gender === "m") return t("wca.players.genderMale");
+        if (gender === "f") return t("wca.players.genderFemale");
         return t("wca.players.genderOther");
       },
     },
@@ -155,8 +171,17 @@ export function WcaPlayersSearchView() {
 
       <Input
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(event) => {
+          // Invalidate in-flight requests immediately, before effect cleanup.
+          requestIdRef.current += 1;
+          setQuery(event.target.value);
+          setCountryKey("");
+          setShowAll(false);
+          setResults([]);
+          setHasSearched(false);
+        }}
         placeholder={t("wca.players.placeholder")}
+        aria-label={t("wca.players.placeholder")}
         allowClear
         size="large"
         style={inputStyle}
@@ -175,20 +200,78 @@ export function WcaPlayersSearchView() {
         </div>
       )}
 
-      {loading && results.length === 0 && (
-        <div style={{ marginTop: 24 }}>
+      {loading && (
+        <div style={{ marginTop: 24 }} role="status" aria-live="polite">
           <Spin description={t("wca.players.searching")} />
         </div>
       )}
 
-      {results.length > 0 && (
+      {!loading && !error && hasSearched && results.length === 0 && (
+        <Alert style={{ marginTop: 24 }} type="info" showIcon message={t("wca.players.noMatches")} />
+      )}
+
+      {!loading && results.length > 0 && (
         <div style={{ marginTop: 24, width: "100%" }}>
-          <Table
-            dataSource={results}
-            columns={columns}
-            rowKey={(record) => record.wca_id}
-            pagination={{ pageSize: 10, showSizeChanger: true }}
+          <Select
+            value={countryKey || undefined}
+            onChange={(value: string | undefined) => {
+              setCountryKey(value ?? "");
+              setShowAll(false);
+            }}
+            allowClear
+            onClear={() => {
+              setCountryKey("");
+              setShowAll(false);
+            }}
+            placeholder={t("wca.players.regionFilter")}
+            aria-label={t("wca.players.regionFilter")}
+            options={countryKeys.map((key) => ({
+              value: key,
+              label: countryLabel(key, key),
+            }))}
+            style={{ width: "100%", maxWidth: 400, marginBottom: 8 }}
           />
+          <Typography.Text type="secondary" style={{ display: "block", marginBottom: 12 }}>
+            {t("wca.players.regionFilterHint")}
+          </Typography.Text>
+          {filtered.length === 0 ? (
+            <Alert type="info" showIcon message={t("wca.players.noRegionMatches")} />
+          ) : policy === "narrow" ? (
+            <Alert
+              type="warning"
+              showIcon
+              message={tf("wca.players.narrowResults", { count: filtered.length })}
+            />
+          ) : (
+            <>
+              {policy === "confirm" && !showAll && (
+                <Alert
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 12 }}
+                  message={tf("wca.players.confirmResults", { count: filtered.length })}
+                  action={
+                    <Button onClick={() => setShowAll(true)}>
+                      {t("wca.players.showAllResults")}
+                    </Button>
+                  }
+                />
+              )}
+              <Typography.Text type="secondary" style={{ display: "block", marginBottom: 8 }}>
+                {tf("wca.players.showingResults", {
+                  shown: visible.length,
+                  count: filtered.length,
+                })}
+              </Typography.Text>
+              <Table
+                dataSource={visible}
+                columns={columns}
+                rowKey={(record) => record.wca_id}
+                scroll={{ x: 680 }}
+                pagination={{ pageSize: 20, showSizeChanger: false }}
+              />
+            </>
+          )}
         </div>
       )}
     </div>
