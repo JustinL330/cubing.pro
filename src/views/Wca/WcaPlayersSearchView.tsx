@@ -12,6 +12,7 @@ import {
   filterWcaSearchResults,
   getVisibleWcaSearchResults,
   getWcaSearchCountries,
+  getWcaSearchCountryLabel,
   getWcaSearchResultPolicy,
 } from "@/views/Wca/wcaSearchRules";
 import { getWCAPersons } from "@/services/cubing-pro/wca/player";
@@ -41,7 +42,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export function WcaPlayersSearchView() {
-  const { t, tf } = useI18n();
+  const { t, tf, locale } = useI18n();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<WCAPerson[]>([]);
   const [countryKey, setCountryKey] = useState("");
@@ -105,6 +106,11 @@ export function WcaPlayersSearchView() {
   const policy = getWcaSearchResultPolicy(filtered.length);
   const visible = getVisibleWcaSearchResults(filtered, showAll);
 
+  const countryLabel = (iso2: string | undefined, countryId?: string) =>
+    locale.startsWith("zh")
+      ? getCountryDisplayName(iso2 || countryId, countryId)
+      : getWcaSearchCountryLabel(iso2, countryId, locale);
+
   const columns = [
     {
       title: t("wca.players.wcaId"),
@@ -119,7 +125,7 @@ export function WcaPlayersSearchView() {
       key: "iso2",
       width: 150,
       render: (text: string, record: WCAPerson) => (
-        <>{getCountryDisplayName(text || record.country_id, record.country_id)}</>
+        <>{countryLabel(text, record.country_id)}</>
       ),
     },
     {
@@ -221,7 +227,7 @@ export function WcaPlayersSearchView() {
             aria-label={t("wca.players.regionFilter")}
             options={countryKeys.map((key) => ({
               value: key,
-              label: getCountryDisplayName(key, key),
+              label: countryLabel(key, key),
             }))}
             style={{ width: "100%", maxWidth: 400, marginBottom: 8 }}
           />
