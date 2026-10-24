@@ -8,12 +8,13 @@ const browser = await chromium.launch({ headless: true });
 test.after(async () => browser.close());
 
 async function openMobileMenu(page) {
-  await page.goto(`${baseUrl}/welcome`, { waitUntil: "domcontentloaded" });
+  const response = await page.goto(`${baseUrl}/welcome`, { waitUntil: "domcontentloaded" });
+  console.log("Mobile menu page response", response?.status(), "body:", (await page.locator("body").innerText()).slice(0, 500));
   const trigger = page.locator('header button').filter({ hasText: "☰" });
   await trigger.waitFor();
   await trigger.click();
   const dialog = page.getByRole("dialog");
-  await dialog.waitFor();
+  await dialog.waitFor({ timeout: 8000 });
   await page.waitForFunction(() =>
     document.activeElement?.getAttribute("aria-label") ===
     document.querySelector('[role="dialog"] button[aria-label]')?.getAttribute("aria-label"),
