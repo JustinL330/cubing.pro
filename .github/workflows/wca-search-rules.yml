@@ -5,6 +5,11 @@ on:
     paths:
       - "src/views/Wca/wcaSearchRules.ts"
       - "tests/wca-search-rules.test.mjs"
+      - "tests/wca-search-i18n.test.mjs"
+      - "src/i18n/extra-catalogs.ts"
+      - "src/i18n/messages/ko-KR.ts"
+      - "src/i18n/messages/wca-en-US.ts"
+      - "src/i18n/messages/wca-zh-CN.ts"
       - ".github/workflows/wca-search-rules.yml"
   workflow_dispatch:
 
@@ -20,4 +25,4 @@ jobs:
         with:
           node-version: "22"
       - name: Test WCA search rules
-        run: node --experimental-strip-types --test tests/wca-search-rules.test.mjs
+        run: node --experimental-strip-types --test tests/wca-search-rules.test.mjs tests/wca-search-i18n.test.mjs
