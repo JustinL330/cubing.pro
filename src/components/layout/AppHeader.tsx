@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { HeaderUserActions } from "@/components/layout/HeaderUserActions";
@@ -247,15 +247,55 @@ function MobileNav({
 }) {
   const pathname = usePathname() ?? "";
   const { t } = useI18n();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
+
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
+    const focusFrame = requestAnimationFrame(() => closeButtonRef.current?.focus());
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-  }, [open]);
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        previousFocus.focus();
+      }
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -271,6 +311,9 @@ function MobileNav({
       />
       <Box
         as="nav"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
         aria-label={t("nav.menu")}
         position="fixed"
         top="0"
@@ -298,6 +341,7 @@ function MobileNav({
             {t("nav.menu")}
           </Text>
           <IconButton
+            ref={closeButtonRef}
             aria-label={t("nav.close")}
             variant="ghost"
             size="xs"
@@ -350,6 +394,7 @@ function MobileNav({
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileOpen(false), []);
   const { t } = useI18n();
 
   const nav = useMemo(() => buildMainNav(), []);
@@ -418,7 +463,7 @@ export function AppHeader() {
       </Box>
       <MobileNav
         open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
+        onClose={closeMobileNav}
         nav={nav}
       />
     </>
