@@ -48,7 +48,7 @@ export function CuberwenjunThumbnail() {
           <Box flex="1" minW="0" bg={orange.bgMid} position="relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={THUMBNAIL_IMG}
+              src={encodeURI(THUMBNAIL_IMG)}
               alt="俊改魔方"
               style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
               onError={(e) => {
@@ -124,7 +124,7 @@ export function CuberwenjunFullContent() {
           <Flex key={index} direction="column" align="center" w="full" maxW="600px">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={item.src}
+              src={encodeURI(item.src)}
               alt={item.caption}
               style={{ width: "100%", maxWidth: 600, borderRadius: 8, display: "block" }}
             />
