@@ -1,0 +1,21 @@
+name: Skip navigation smoke test
+
+on:
+  pull_request:
+    paths:
+      - "src/components/layout/AppShell.tsx"
+      - "src/components/layout/SkipToMainLink.tsx"
+      - "tests/skip-navigation.test.mjs"
+      - ".github/workflows/skip-navigation.yml"
+  workflow_dispatch:
+
+jobs:
+  skip-navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check skip link and main landmark
+        run: node --test tests/skip-navigation.test.mjs
