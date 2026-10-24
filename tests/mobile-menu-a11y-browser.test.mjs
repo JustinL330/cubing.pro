@@ -8,8 +8,11 @@ const browser = await chromium.launch({ headless: true });
 test.after(async () => browser.close());
 
 async function openMobileMenu(page) {
+  await page.addInitScript(() => localStorage.setItem("cubing_pro_locale", "en-US"));
   const response = await page.goto(`${baseUrl}/timer`, { waitUntil: "domcontentloaded" });
   assert.equal(response?.status(), 200, "Timer page should load before testing the menu");
+  // Wait for client hydration, not just server-rendered HTML, before clicking.
+  await page.waitForFunction(() => document.documentElement.lang === "en-US");
   const trigger = page.locator('header button').filter({ hasText: "☰" });
   await trigger.waitFor();
   await trigger.click();
