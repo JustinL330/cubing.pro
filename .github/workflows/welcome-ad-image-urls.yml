@@ -30,8 +30,11 @@ jobs:
         run: npm run lint
       - name: TypeScript
         run: npx tsc --noEmit
-      - name: Next.js build
-        run: npm run build
+      # The project's npm prebuild fetches HowToCook through a third-party proxy,
+      # which is unrelated to advertisement URLs and may return HTTP 403.
+      # Compiling Next directly uses the checked-in recipes/tips JSON.
+      - name: Next.js build (without external HowToCook sync)
+        run: npx next build
       - name: Start local Next.js server
         run: |
           npm run dev -- --hostname 127.0.0.1 > /tmp/cubing-welcome-next.log 2>&1 &
