@@ -1,6 +1,6 @@
 "use client";
 
-import { Box } from "@chakra-ui/react";
+import { chakra } from "@chakra-ui/react";
 
 import { useI18n } from "@/contexts/I18nProvider";
 import type { Locale } from "@/i18n";
@@ -19,8 +19,7 @@ export function SkipToMainLink() {
   const { locale } = useI18n();
 
   return (
-    <Box
-      as="a"
+    <chakra.a
       href="#main-content"
       position="fixed"
       top="3"
@@ -44,6 +43,6 @@ export function SkipToMainLink() {
       }}
     >
       {skipLabels[locale]}
-    </Box>
+    </chakra.a>
   );
 }
