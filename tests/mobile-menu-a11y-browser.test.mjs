@@ -8,8 +8,8 @@ const browser = await chromium.launch({ headless: true });
 test.after(async () => browser.close());
 
 async function openMobileMenu(page) {
-  const response = await page.goto(`${baseUrl}/welcome`, { waitUntil: "domcontentloaded" });
-  console.log("Mobile menu page response", response?.status(), "body:", (await page.locator("body").innerText()).slice(0, 500));
+  const response = await page.goto(`${baseUrl}/timer`, { waitUntil: "domcontentloaded" });
+  assert.equal(response?.status(), 200, "Timer page should load before testing the menu");
   const trigger = page.locator('header button').filter({ hasText: "☰" });
   await trigger.waitFor();
   await trigger.click();
