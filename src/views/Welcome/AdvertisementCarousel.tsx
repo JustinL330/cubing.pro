@@ -89,7 +89,6 @@ export function AdvertisementCarousel() {
               type="button"
               className="ad-carousel-toggle"
               aria-label={playing ? copy.pause : copy.resume}
-              aria-pressed={!playing}
               onClick={() => setMotionChoice(playing ? "pause" : "play")}
             >
               <span aria-hidden="true">{playing ? "Ⅱ" : "▶"}</span>
