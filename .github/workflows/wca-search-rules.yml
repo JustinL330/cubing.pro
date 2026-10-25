@@ -6,6 +6,7 @@ on:
       - "src/views/Wca/wcaSearchRules.ts"
       - "src/views/Wca/WcaPlayersSearchView.tsx"
       - "tests/wca-search-rules.test.mjs"
+      - "tests/wca-search-browser.test.mjs"
       - ".github/workflows/wca-search-rules.yml"
   workflow_dispatch:
 
@@ -31,3 +32,27 @@ jobs:
         run: npx tsc --noEmit
       - name: Build without unrelated external HowToCook sync
         run: npx next build
+
+      - name: Install Chromium for real browser regression
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local Next.js with a same-origin mockable API
+        run: |
+          NEXT_PUBLIC_API_BASE=http://127.0.0.1:3000/v3/cube-api npm run dev -- --hostname 127.0.0.1 > /tmp/cubing-next.log 2>&1 &
+          echo $! > /tmp/cubing-next.pid
+          for i in $(seq 1 90); do
+            if curl --fail --silent http://127.0.0.1:3000/wca/players > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-next.log
+          exit 1
+      - name: Test WCA results in Chromium with mocked API
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/wca-search-browser.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-next.log || true
