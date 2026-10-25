@@ -42,7 +42,7 @@ jobs:
           NEXT_PUBLIC_API_BASE=http://127.0.0.1:3000/v3/cube-api npm run dev -- --hostname 127.0.0.1 > /tmp/cubing-next.log 2>&1 &
           echo $! > /tmp/cubing-next.pid
           for i in $(seq 1 90); do
-            if curl --fail --silent http://127.0.0.1:3000/wca/players > /dev/null; then
+            if curl --fail --silent --location --max-time 120 http://127.0.0.1:3000/wca/players/ > /dev/null; then
               exit 0
             fi
             sleep 2
