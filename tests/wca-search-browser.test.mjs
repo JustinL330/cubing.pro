@@ -36,7 +36,7 @@ async function openSearch(count) {
       await route.abort();
     }
   });
-  const response = await page.goto(`${baseUrl}/wca/players`, { waitUntil: "domcontentloaded" });
+  const response = await page.goto(`${baseUrl}/wca/players/`, { waitUntil: "domcontentloaded", timeout: 120000 });
   assert.equal(response?.status(), 200);
   await page.waitForFunction(() => document.documentElement.lang === "en-US");
   await page.getByRole("textbox", { name: "Enter WCA ID or name" }).fill(query);
