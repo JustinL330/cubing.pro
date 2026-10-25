@@ -60,6 +60,7 @@ export function AdvertisementCarousel() {
       <div style={{ height: CAROUSEL_HEIGHT }} className="ad-carousel-container">
         <div
           className="ad-carousel-track"
+          style={{ transform: `translateX(-${current * 100}%)` }}
           aria-live={shouldAdvance ? "off" : "polite"}
         >
           {adList.map((ad, index) => {
@@ -74,7 +75,6 @@ export function AdvertisementCarousel() {
                 aria-label={copy.slideLabel(index + 1, adList.length)}
                 aria-hidden={!active}
                 inert={!active}
-                style={{ transform: `translateX(-${current * 100}%)` }}
               >
                 <div className="ad-carousel-thumbnail-wrap">
                   <Thumbnail />
