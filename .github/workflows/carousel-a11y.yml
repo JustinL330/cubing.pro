@@ -7,6 +7,7 @@ on:
       - "src/views/Welcome/carousel-copy.ts"
       - "src/views/ExternalLinks/externalLinks.css"
       - "tests/carousel-motion.test.mjs"
+      - "tests/carousel-browser.test.mjs"
       - ".github/workflows/carousel-a11y.yml"
   workflow_dispatch:
 
@@ -16,7 +17,7 @@ permissions:
 jobs:
   carousel:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,3 +34,34 @@ jobs:
         run: npx tsc --noEmit
       - name: Build without unrelated external HowToCook sync
         run: npx next build
+      # PR #6 independently fixes the existing non-ASCII image URL /welcome
+      # SSR failure. Use its exact file only in this disposable CI workspace,
+      # so this PR stays independent and never silently merges PR #6.
+      - name: Apply pending PR #6 SSR prerequisite to test workspace only
+        run: |
+          git fetch --depth=1 origin d22971b8feb1d49cf074efe2a3aab9e6423c935f
+          git show FETCH_HEAD:src/views/Advertisement/ads/cuberwenjun.tsx > src/views/Advertisement/ads/cuberwenjun.tsx
+          grep -q 'encodeURI(THUMBNAIL_IMG)' src/views/Advertisement/ads/cuberwenjun.tsx
+          grep -q 'encodeURI(item.src)' src/views/Advertisement/ads/cuberwenjun.tsx
+      - name: Install Chromium for browser integration
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start local Next.js
+        run: |
+          npm run dev -- --hostname 127.0.0.1 > /tmp/cubing-carousel-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent --location --max-time 120 http://127.0.0.1:3000/welcome/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-carousel-next.log
+          exit 1
+      - name: Exercise carousel in desktop and mobile Chromium
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/carousel-browser.test.mjs
+      - name: Show Next.js logs on failure
+        if: failure()
+        run: cat /tmp/cubing-carousel-next.log || true
