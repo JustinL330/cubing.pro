@@ -55,6 +55,7 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
   const { t, tf } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const requestedAvatarIds = useRef(new Set<string>());
+  const avatarRequestQueue = useRef<Promise<void>>(Promise.resolve());
   const [avatarCache, setAvatarCache] = useState<Record<string, string>>({});
   const [thanksList, setThanksList] = useState<ThanksPerson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +87,8 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
     );
     for (const id of ids) requestedAvatarIds.current.add(id);
 
-    void fetchAvatarThumbnails(
+    // Serialize expansion batches so rapid toggles cannot exceed four concurrent requests.
+    avatarRequestQueue.current = avatarRequestQueue.current.then(() => fetchAvatarThumbnails(
       ids,
       async (wcaID) => {
         const res = await apiGetWCAPersonProfile(wcaID);
@@ -95,7 +97,7 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
       (wcaID, url) => {
         setAvatarCache((prev) => ({ ...prev, [wcaID]: url }));
       },
-    );
+    ));
   }, [thanksList, expanded]);
 
   if (loading || thanksList.length === 0) return null;
