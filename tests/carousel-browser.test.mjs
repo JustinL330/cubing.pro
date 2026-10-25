@@ -33,7 +33,7 @@ test("reduced-motion visitors can choose slides and explicitly resume or pause",
   try {
     const toggle = page.locator(".ad-carousel-toggle");
     assert.equal(await toggle.getAttribute("aria-label"), "Resume automatic rotation");
-    assert.equal(await toggle.getAttribute("aria-pressed"), "true");
+    assert.equal(await toggle.getAttribute("aria-pressed"), null);
 
     await page.getByRole("button", { name: "Go to slide 2 of 2" }).click();
     const slides = page.locator(".ad-carousel-slide");
@@ -44,7 +44,7 @@ test("reduced-motion visitors can choose slides and explicitly resume or pause",
 
     await toggle.click();
     assert.equal(await toggle.getAttribute("aria-label"), "Pause automatic rotation");
-    assert.equal(await toggle.getAttribute("aria-pressed"), "false");
+    assert.equal(await toggle.getAttribute("aria-pressed"), null);
     await toggle.click();
     assert.equal(await toggle.getAttribute("aria-label"), "Resume automatic rotation");
   } finally {
