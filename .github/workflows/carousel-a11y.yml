@@ -1,0 +1,35 @@
+name: Homepage carousel accessibility
+
+on:
+  pull_request:
+    paths:
+      - "src/views/Welcome/AdvertisementCarousel.tsx"
+      - "src/views/Welcome/carousel-copy.ts"
+      - "src/views/ExternalLinks/externalLinks.css"
+      - "tests/carousel-motion.test.mjs"
+      - ".github/workflows/carousel-a11y.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  carousel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Carousel accessibility regressions
+        run: node --experimental-strip-types --test tests/carousel-motion.test.mjs
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Build without unrelated external HowToCook sync
+        run: npx next build
