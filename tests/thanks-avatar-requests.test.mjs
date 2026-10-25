@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { fetchAvatarThumbnails, getAvatarFetchIds } from "../src/views/Welcome/thanksAvatarRequests.ts";
 
@@ -55,4 +56,10 @@ test("no visible WCA IDs means no requests", async () => {
     return undefined;
   }, () => {});
   assert.equal(calls, 0);
+});
+
+test("component serializes expansion batches instead of starting parallel worker pools", () => {
+  const component = readFileSync(new URL("../src/views/Welcome/ThanksSection.tsx", import.meta.url), "utf8");
+  assert.match(component, /avatarRequestQueue\.current = avatarRequestQueue\.current\.then\(\(\) => fetchAvatarThumbnails\(/);
+  assert.match(component, /\[thanksList, expanded\]/);
 });
