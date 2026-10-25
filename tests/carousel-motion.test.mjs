@@ -22,7 +22,8 @@ test("all six locales provide meaningful carousel controls and slide names", () 
 test("carousel respects reduced motion and exposes a manual pause/resume button", () => {
   assert.match(component, /prefers-reduced-motion: reduce/);
   assert.match(component, /motionChoice === "auto" && !reducedMotion/);
-  assert.match(component, /aria-pressed=\{!playing\}/);
+  // The action label changes from Pause to Resume, so this is not an ARIA toggle button.
+  assert.doesNotMatch(component, /aria-pressed=/);
   assert.match(component, /setMotionChoice\(playing \? "pause" : "play"\)/);
   assert.match(component, /!hovered && !focusWithin/);
   assert.match(component, /onFocusCapture/);
