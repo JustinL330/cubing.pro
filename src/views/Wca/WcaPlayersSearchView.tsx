@@ -268,7 +268,7 @@ export function WcaPlayersSearchView() {
                 columns={columns}
                 rowKey={(record) => record.wca_id}
                 scroll={{ x: 680 }}
-                pagination={{ pageSize: 20, showSizeChanger: false }}
+                pagination={false}
               />
             </>
           )}
