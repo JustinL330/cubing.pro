@@ -17,7 +17,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "同意统计",
     deny: "拒绝统计",
     enabled: "已同意，可随时撤回",
-    disabled: "未同意，不会加载统计脚本",
+    disabled: "未同意，不會傳送統計事件",
     unavailable: "站点管理员尚未启用访问统计",
   },
   "zh-TW": {
@@ -26,7 +26,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "同意統計",
     deny: "拒絕統計",
     enabled: "已同意，可隨時撤回",
-    disabled: "未同意，不會載入統計程式",
+    disabled: "未同意，不會傳送統計事件",
     unavailable: "網站管理員尚未啟用網站統計",
   },
   "en-US": {
@@ -35,7 +35,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "Allow analytics",
     deny: "Decline analytics",
     enabled: "Allowed; you can withdraw consent",
-    disabled: "Not allowed; analytics scripts are not loaded",
+    disabled: "Not allowed; analytics events are not sent",
     unavailable: "Analytics have not been configured by the site owner",
   },
   "ja-JP": {
@@ -44,7 +44,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "同意する",
     deny: "同意しない",
     enabled: "同意済み。いつでも撤回できます",
-    disabled: "未同意。解析スクリプトは読み込まれません",
+    disabled: "未同意。解析イベントは送信されません",
     unavailable: "サイト管理者が解析を設定していません",
   },
   "ko-KR": {
@@ -53,7 +53,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "분석 동의",
     deny: "분석 거부",
     enabled: "동의함. 언제든 철회할 수 있습니다",
-    disabled: "동의하지 않음. 분석 스크립트를 불러오지 않습니다",
+    disabled: "동의하지 않음. 분석 이벤트를 전송하지 않습니다",
     unavailable: "사이트 관리자가 분석을 설정하지 않았습니다",
   },
   "es-ES": {
@@ -62,7 +62,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "Aceptar analítica",
     deny: "Rechazar analítica",
     enabled: "Aceptada; puedes retirar tu consentimiento",
-    disabled: "No aceptada; no se carga el script",
+    disabled: "No aceptada; no se envían eventos de analítica",
     unavailable: "El propietario aún no ha configurado la analítica",
   },
 };
