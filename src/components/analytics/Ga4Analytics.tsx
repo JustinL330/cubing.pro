@@ -179,11 +179,11 @@ export function AnalyticsPreferences() {
         {!configured ? copy.unavailable : consent === "granted" ? copy.enabled : copy.disabled}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <button type="button" aria-pressed={consent === "granted"} onClick={() => setConsent("granted")}
+        <button type="button" aria-pressed={configured && consent === "granted"} disabled={!configured} onClick={() => { if (configured) setConsent("granted"); }}
           style={{ border: "1px solid currentColor", borderRadius: 8, padding: "8px 14px" }}>
           {copy.allow}
         </button>
-        <button type="button" aria-pressed={consent === "denied"} onClick={() => setConsent("denied")}
+        <button type="button" aria-pressed={configured && consent === "denied"} disabled={!configured} onClick={() => { if (configured) setConsent("denied"); }}
           style={{ border: "1px solid currentColor", borderRadius: 8, padding: "8px 14px" }}>
           {copy.deny}
         </button>
