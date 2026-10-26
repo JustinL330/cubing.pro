@@ -1,6 +1,6 @@
 # Fork-only analytics and GEO rollout (2026-10-26)
 
-Status: **code scaffold only**, not configured, deployed, or verified with real visitors.
+Status: **code scaffold only**, not configured, deployed, or verified with real visitors. A Chromium production-build regression checks that no Google scripts or requests appear without an ID, even with previously stored consent. This does not verify enabled GA4.
 
 ## Ownership and activation checklist
 
@@ -24,7 +24,7 @@ Future optional events (not yet implemented): timer started/completed, WCA searc
 
 ## Verification before marking production-ready
 
-1. Run `node --test tests/analytics-privacy.test.mjs`, `npm ci`, `npm run lint`, `npx tsc --noEmit`, `npx next build`.
+1. Run `node --test tests/analytics-privacy.test.mjs`, `npm ci`, `npm run lint`, `npx tsc --noEmit`, `npx next build`. CI also runs `tests/analytics-browser.test.mjs` in Chromium against a production Next.js server built with no analytics ID or site origin. Preferences cannot store consent while analytics are unconfigured.
 2. With **no ID**, verify no Google script, no GA cookies, and no collection requests on public or private routes.
 3. On the verified production domain with a valid GA4 ID, verify the prompt in all six languages. Before consent and after rejection, check Network for **zero** analytics script/collection requests. Test withdrawal in Settings.
 4. With consent, use browser Network + GA4 DebugView/Realtime: first load, client navigation, reload and Back each produce **one** page view for an allowed route, with sanitized `page_location` and no raw query/referrer. Check private/profile/settings routes produce no page views.
