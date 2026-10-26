@@ -12,6 +12,7 @@ import {
 import { useMemo, useState } from "react";
 
 import { PalettePicker } from "@/components/ui/PalettePicker";
+import { AnalyticsPreferences } from "@/components/analytics/Ga4Analytics";
 import { useColorMode } from "@/components/ui/color-mode";
 import { toaster } from "@/components/ui/toaster";
 import { useTheme } from "next-themes";
@@ -137,6 +138,7 @@ export function SettingsPage() {
           </VStack>
         </Card.Body>
       </Card.Root>
+      <AnalyticsPreferences />
     </VStack>
   );
 }
