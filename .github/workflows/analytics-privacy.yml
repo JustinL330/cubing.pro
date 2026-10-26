@@ -9,6 +9,7 @@ on:
       - "src/views/SettingsPage.tsx"
       - "tests/analytics-privacy.test.mjs"
       - "tests/analytics-browser.test.mjs"
+      - "tests/analytics-configured-browser.test.mjs"
       - "docs/analytics-geo-rollout.md"
       - ".github/workflows/analytics-privacy.yml"
   workflow_dispatch:
@@ -55,3 +56,42 @@ jobs:
       - name: Show server logs on failure
         if: failure()
         run: cat /tmp/cubing-analytics-next.log || true
+
+  configured-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Build with synthetic GA4 configuration (never production credentials)
+        env:
+          NEXT_PUBLIC_GA4_MEASUREMENT_ID: G-TESTONLY123
+          NEXT_PUBLIC_SITE_ORIGIN: https://127.0.0.1:3443
+        run: npx next build
+      - name: Install isolated browser and generate disposable TLS certificate
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout /tmp/ga4-test-key.pem -out /tmp/ga4-test-cert.pem \
+            -subj "/CN=127.0.0.1" -addext "subjectAltName=IP:127.0.0.1"
+      - name: Start production server
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-analytics-configured-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent --location --max-time 15 http://127.0.0.1:3000/timer/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-analytics-configured-next.log
+          exit 1
+      - name: Verify consent, sanitized PV, revocation with Chromium and mocked Google
+        run: node --test tests/analytics-configured-browser.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-analytics-configured-next.log || true
