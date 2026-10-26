@@ -1,0 +1,30 @@
+name: Opt-in analytics safeguards
+
+on:
+  pull_request:
+    paths:
+      - "src/components/analytics/**"
+      - "src/lib/analyticsPrivacy.ts"
+      - "src/components/ui/provider.tsx"
+      - "src/views/SettingsPage.tsx"
+      - "tests/analytics-privacy.test.mjs"
+      - "docs/analytics-geo-rollout.md"
+      - ".github/workflows/analytics-privacy.yml"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: node --test tests/analytics-privacy.test.mjs
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      # Avoid unrelated HowToCook remote sync in npm prebuild.
+      - run: npx next build
