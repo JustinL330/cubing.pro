@@ -90,14 +90,21 @@ test("configured GA4 respects consent and sanitizes page views", { timeout: 1800
     await page.waitForTimeout(350);
     assert.equal(pageViews(await page.evaluate(() => window.dataLayer ?? [])).length, 2, "query-only navigation must not double count");
 
-    await page.evaluate(() => history.pushState({}, "", "/settings/?private_token=hidden"));
-    await page.waitForTimeout(350);
-    assert.equal(pageViews(await page.evaluate(() => window.dataLayer ?? [])).length, 2, "private settings route must not be tracked");
+    // Entering a sensitive route must unload a tag already injected on the
+    // previous public route. Merely sending consent=denied is not sufficient:
+    // a live Google script can retain its own History API listeners.
+    await Promise.all([
+      page.waitForEvent("load", { timeout: 120000 }),
+      page.evaluate(() => history.pushState({}, "", "/settings/?private_token=hidden")),
+    ]);
+    assert.equal(pageViews(await page.evaluate(() => window.dataLayer ?? [])).length, 0);
+    assert.equal(await page.locator('script[data-cubing-analytics="true"]').count(), 0);
+    assert.equal(await page.evaluate((key) => localStorage.getItem(key), consentKey), "granted");
 
     await page.evaluate(() => history.pushState({}, "", "/timer/?secret=back"));
-    await page.waitForFunction(() => (window.dataLayer ?? []).filter((row) => row[0] === "event" && row[1] === "page_view").length === 3);
+    await page.waitForFunction(() => (window.dataLayer ?? []).filter((row) => row[0] === "event" && row[1] === "page_view").length === 1);
     spaViews = pageViews(await page.evaluate(() => window.dataLayer ?? []));
-    assert.equal(spaViews[2][2].page_location, `${origin}/timer`);
+    assert.equal(spaViews[0][2].page_location, `${origin}/timer`);
     assert.ok(spaViews.every((view) => !JSON.stringify(view).includes("secret=")));
 
     // Full reload must count one new view, not an automatic+manual double hit.
@@ -105,22 +112,31 @@ test("configured GA4 respects consent and sanitizes page views", { timeout: 1800
     await page.waitForFunction(() => (window.dataLayer ?? []).some((row) => row[0] === "event" && row[1] === "page_view"));
     assert.equal(pageViews(await page.evaluate(() => window.dataLayer ?? [])).length, 1);
 
-    // Settings is deliberately excluded from the analytics route allowlist.
-    await page.goto(`${origin}/settings/?private_token=never-send`, {
+    // Revocation from another tab must immediately unload the active tag.
+    // No Google script or collection request may appear on the reloaded tab.
+    const settingsTab = await context.newPage();
+    await settingsTab.goto(`${origin}/settings/?private_token=never-send`, {
       waitUntil: "domcontentloaded", timeout: 120000,
     });
-    await page.getByRole("button", { name: "Decline analytics" }).waitFor({ timeout: 60000 });
+    await settingsTab.getByRole("button", { name: "Decline analytics" }).waitFor({ timeout: 60000 });
+    assert.equal(await settingsTab.locator('script[data-cubing-analytics="true"]').count(), 0);
+    const beforeRevoke = googleRequests.length;
+    await Promise.all([
+      page.waitForEvent("load", { timeout: 120000 }),
+      settingsTab.getByRole("button", { name: "Decline analytics" }).click(),
+    ]);
+    assert.equal(await page.evaluate((key) => localStorage.getItem(key), consentKey), "denied");
     assert.equal(await page.locator('script[data-cubing-analytics="true"]').count(), 0);
     assert.equal(await page.evaluate(() => window.dataLayer?.length ?? 0), 0);
-    await page.getByRole("button", { name: "Decline analytics" }).click();
-    assert.equal(await page.evaluate((key) => localStorage.getItem(key), consentKey), "denied");
+    assert.equal(googleRequests.length, beforeRevoke, "revocation must not reload Google");
+    await settingsTab.close();
 
-    const beforeReturn = googleRequests.length;
-    await page.goto(`${origin}/timer/?wca_id=private`, {
+    // A rejected visitor must remain untracked on subsequent public navigations.
+    await page.goto(`${origin}/algs/?wca_id=private`, {
       waitUntil: "domcontentloaded", timeout: 120000,
     });
     await page.waitForTimeout(500);
-    assert.equal(googleRequests.length, beforeReturn, "revoked consent must not reload Google");
+    assert.equal(googleRequests.length, beforeRevoke);
     assert.equal(await page.locator('script[data-cubing-analytics="true"]').count(), 0);
     assert.equal(await page.evaluate(() => window.dataLayer?.length ?? 0), 0);
     await context.close();
