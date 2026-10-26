@@ -44,7 +44,7 @@ function pageViews(rows) {
 
 test("configured GA4 respects consent and sanitizes page views", { timeout: 180000 }, async () => {
   const server = await startHttpsProxy();
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL || undefined });
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true });
     const googleRequests = [];
