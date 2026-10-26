@@ -17,7 +17,7 @@ export const analyticsCopy: Record<Locale, AnalyticsCopy> = {
     allow: "同意统计",
     deny: "拒绝统计",
     enabled: "已同意，可随时撤回",
-    disabled: "未同意，不會傳送統計事件",
+    disabled: "未同意，不会发送统计事件",
     unavailable: "站点管理员尚未启用访问统计",
   },
   "zh-TW": {
