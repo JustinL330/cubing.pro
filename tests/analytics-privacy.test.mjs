@@ -39,3 +39,9 @@ test("consent notices cover six supported locales", () => {
     assert.ok(translations.includes(`"${locale}":`), locale);
   }
 });
+
+test("unconfigured analytics preferences cannot save a premature opt-in", () => {
+  assert.match(tracker, /disabled=\{!configured\}/);
+  assert.match(tracker, /if \(configured\) setConsent\("granted"\)/);
+  assert.match(tracker, /if \(configured\) setConsent\("denied"\)/);
+});
