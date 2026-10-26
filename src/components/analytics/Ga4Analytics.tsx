@@ -168,13 +168,15 @@ export function AnalyticsPreferences() {
   const { locale } = useI18n();
   const [consent, setConsent] = useAnalyticsConsent();
   const copy = analyticsCopy[locale];
+  const [configured, setConfigured] = useState(false);
+  useEffect(() => { setConfigured(isConfigured()); }, []);
 
   return (
     <section aria-label={copy.heading} style={{ padding: 16, border: "1px solid var(--border-default, #aaa)", borderRadius: 10 }}>
       <h2 style={{ fontWeight: 700, marginBottom: 8 }}>{copy.heading}</h2>
       <p style={{ fontSize: 14, marginBottom: 10 }}>{copy.description}</p>
       <p style={{ fontSize: 14, marginBottom: 10 }} aria-live="polite">
-        {!isConfigured() ? copy.unavailable : consent === "granted" ? copy.enabled : copy.disabled}
+        {!configured ? copy.unavailable : consent === "granted" ? copy.enabled : copy.disabled}
       </p>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <button type="button" aria-pressed={consent === "granted"} onClick={() => setConsent("granted")}
