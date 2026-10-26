@@ -79,6 +79,27 @@ test("configured GA4 respects consent and sanitizes page views", { timeout: 1800
     });
     assert.equal(rows.find((row) => row[0] === "consent" && row[1] === "update")?.[2]?.analytics_storage, "granted");
 
+    // Next.js App Router integrates native History API changes with usePathname.
+    // Route transitions should generate one sanitized PV per new public path.
+    await page.evaluate(() => history.pushState({}, "", "/algs/?secret=not-for-ga"));
+    await page.waitForFunction(() => (window.dataLayer ?? []).filter((row) => row[0] === "event" && row[1] === "page_view").length === 2);
+    let spaViews = pageViews(await page.evaluate(() => window.dataLayer ?? []));
+    assert.equal(spaViews[1][2].page_location, `${origin}/algs`);
+
+    await page.evaluate(() => history.pushState({}, "", "/algs/?secret=another"));
+    await page.waitForTimeout(350);
+    assert.equal(pageViews(await page.evaluate(() => window.dataLayer ?? [])).length, 2, "query-only navigation must not double count");
+
+    await page.evaluate(() => history.pushState({}, "", "/settings/?private_token=hidden"));
+    await page.waitForTimeout(350);
+    assert.equal(pageViews(await page.evaluate(() => window.dataLayer ?? [])).length, 2, "private settings route must not be tracked");
+
+    await page.evaluate(() => history.pushState({}, "", "/timer/?secret=back"));
+    await page.waitForFunction(() => (window.dataLayer ?? []).filter((row) => row[0] === "event" && row[1] === "page_view").length === 3);
+    spaViews = pageViews(await page.evaluate(() => window.dataLayer ?? []));
+    assert.equal(spaViews[2][2].page_location, `${origin}/timer`);
+    assert.ok(spaViews.every((view) => !JSON.stringify(view).includes("secret=")));
+
     // Full reload must count one new view, not an automatic+manual double hit.
     await page.reload({ waitUntil: "domcontentloaded", timeout: 120000 });
     await page.waitForFunction(() => (window.dataLayer ?? []).some((row) => row[0] === "event" && row[1] === "page_view"));
