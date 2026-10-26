@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import { I18nProvider } from "@/contexts/I18nProvider";
 import { StaticExportRouteSync } from "@/components/routing/StaticExportRouteSync";
+import { Ga4Analytics } from "@/components/analytics/Ga4Analytics";
 import { system } from "@/theme";
 import { ColorModeButton, ColorModeProvider } from "./color-mode";
 import { AppToaster } from "./toaster";
@@ -19,6 +20,7 @@ export function Provider({ children }: { children: ReactNode }) {
         <I18nProvider>
           <AuthProvider>
             <StaticExportRouteSync />
+            <Ga4Analytics />
             <AppToaster />
             {children}
           </AuthProvider>
