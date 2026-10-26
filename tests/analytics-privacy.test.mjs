@@ -45,3 +45,11 @@ test("unconfigured analytics preferences cannot save a premature opt-in", () => 
   assert.match(tracker, /if \(configured\) setConsent\("granted"\)/);
   assert.match(tracker, /if \(configured\) setConsent\("denied"\)/);
 });
+
+
+test("active tags are unloaded on private routes and cross-tab consent revocation", () => {
+  assert.match(tracker, /window\.location\.reload\(\)/);
+  assert.match(tracker, /window\.addEventListener\("storage", onStorage\)/);
+  assert.match(tracker, /if \(next !== "granted"\) unloadActiveAnalytics\(\)/);
+  assert.match(tracker, /if \(path === null\) unloadActiveAnalytics\(\)/);
+});
