@@ -9,7 +9,7 @@ const consentKey = "cubing_pro_analytics_consent_v1";
 const googleRequest = /(?:googletagmanager\.com\/gtag\/js|google-analytics\.com|analytics\.google\.com)/i;
 
 test("production build without GA4 configuration loads no tracking for any stored consent", { timeout: 180000 }, async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL || undefined });
   try {
     for (const storedConsent of ["unset", "denied", "granted"]) {
       const context = await browser.newContext();
