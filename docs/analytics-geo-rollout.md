@@ -12,7 +12,7 @@ Status: **code scaffold only**, not configured, deployed, or verified with real 
 - [ ] Check the deployment platform's CSP allows `www.googletagmanager.com` and GA4 collection endpoints, if enabled.
 - [ ] Verify that preview/dev/staging traffic cannot satisfy the exact production-origin check.
 
-The integration is off without **both** valid settings. It also requires `NODE_ENV=production`, an exact HTTPS origin match, and explicit per-browser opt-in. The six-language consent prompt is shown on allowed public routes only. Users can withdraw consent from Settings; no analytics script is injected before consent. Once a script has been loaded, revoking consent prevents future intended analytics events but cannot retract previously collected data or remove an already-loaded script.
+The integration is off without **both** valid settings. It also requires `NODE_ENV=production`, an exact HTTPS origin match, and explicit per-browser opt-in. The six-language consent prompt is shown on allowed public routes only. Users can withdraw consent from Settings; no analytics script is injected before consent. Once a script has been loaded, navigating to an excluded/private route or revoking consent (including from another tab) triggers a full page reload to unload the active Google library. This prevents carrying its automatic listeners into sensitive routes. It cannot retract previously collected data or delete Google cookies that may already exist.
 
 ## Privacy and SPA tracking
 
@@ -27,7 +27,7 @@ Future optional events (not yet implemented): timer started/completed, WCA searc
 1. Run `node --test tests/analytics-privacy.test.mjs`, `npm ci`, `npm run lint`, `npx tsc --noEmit`, `npx next build`. CI also runs `tests/analytics-browser.test.mjs` in Chromium against a production Next.js server built with no analytics ID or site origin. Preferences cannot store consent while analytics are unconfigured.
 2. With **no ID**, verify no Google script, no GA cookies, and no collection requests on public or private routes.
 3. On the verified production domain with a valid GA4 ID, verify the prompt in all six languages. Before consent and after rejection, check Network for **zero** analytics script/collection requests. Test withdrawal in Settings.
-4. With consent, use browser Network + GA4 DebugView/Realtime: first load, client navigation, reload and Back each produce **one** page view for an allowed route, with sanitized `page_location` and no raw query/referrer. Check private/profile/settings routes produce no page views.
+4. With consent, use browser Network + GA4 DebugView/Realtime: first load, client navigation, reload and Back each produce **one** page view for an allowed route, with sanitized `page_location` and no raw query/referrer. Check private/profile/settings routes produce no page views and unload an active Google tag through a hard reload. Check revocation in another open tab and the absence of subsequent Google requests.
 5. Check CSP, offline/blocked-Google fallback, page speed, and whether analytics storage/cookies follow the consent decision.
 6. Only then distinguish: **code ready**, **GA4 property configured**, and **production receiving verified data**. None of the latter two is claimed here.
 
