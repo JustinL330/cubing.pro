@@ -14,6 +14,11 @@ on:
       - ".github/workflows/analytics-privacy.yml"
   workflow_dispatch:
 
+# Superseded PR commits must not keep downloading/building in parallel.
+concurrency:
+  group: analytics-privacy-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
