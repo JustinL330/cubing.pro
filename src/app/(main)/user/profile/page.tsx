@@ -5,6 +5,7 @@ import { ProfilePage } from "@/views/admin/ProfilePage";
 
 export const metadata: Metadata = {
   title: "个人中心",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {
