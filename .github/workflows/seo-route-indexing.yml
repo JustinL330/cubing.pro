@@ -5,6 +5,7 @@ on:
     paths:
       - "src/app/(main)/**/page.tsx"
       - "tests/seo-route-indexing.test.mjs"
+      - "tests/seo-route-rendered.test.mjs"
       - ".github/workflows/seo-route-indexing.yml"
   workflow_dispatch:
 
@@ -31,3 +32,21 @@ jobs:
       - run: npx tsc --noEmit
       # Avoid unrelated HowToCook remote clone in npm prebuild.
       - run: npx next build
+      - name: Start production Next.js server
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-seo-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent --location --max-time 15 http://127.0.0.1:3000/timer/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-seo-next.log
+          exit 1
+      - name: Verify rendered robots and timer metadata
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/seo-route-rendered.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-seo-next.log || true
