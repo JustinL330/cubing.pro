@@ -72,8 +72,15 @@ export async function generateMetadata({
   const { path } = await params;
   const pathname = `/${path.join("/")}`;
   const route = matchRoute(pathname);
+  // These routes are not public search results. noindex is not access control.
+  const noIndex =
+    route?.id.startsWith("admin-") ||
+    route?.id.startsWith("user-") ||
+    route?.id === "old-login" ||
+    route?.id === "test";
   return {
     title: route?.name ?? "页面",
+    robots: noIndex ? { index: false, follow: false } : undefined,
   };
 }
 
