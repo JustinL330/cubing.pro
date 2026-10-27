@@ -33,6 +33,18 @@ async function fetchHomepage(path) {
   assert.doesNotMatch(html, /<link\b[^>]*\brel="canonical"/i);
   assert.doesNotMatch(html, /<meta\b[^>]*\bproperty="og:url"/i);
 
+  // Verify meaningful HTML exists before hydration: crawlers should see
+  // headings and internal links, not just metadata or serialized RSC data.
+  const mainHtml = html.match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1] ?? "";
+  assert.ok(mainHtml, `${path}: missing server-rendered <main>`);
+  assert.match(mainHtml, /<h1\b[^>]*>/i, `${path}: missing server-rendered h1`);
+  for (const href of ["/timer", "/algs", "/wca/players"]) {
+    assert.ok(
+      mainHtml.includes(`href="${href}"`) || mainHtml.includes(`href="${href}/"`),
+      `${path}: missing server-rendered link to ${href}`,
+    );
+  }
+
   return { title, description, ogTitle, ogDescription };
 }
 
