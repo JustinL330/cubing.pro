@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { ExportPathMarker } from "@/components/routing/ExportPathMarker";
 import { homepageMetadata } from "@/lib/homepageMetadata";
 import { WelcomePageView } from "@/views/Welcome/WelcomePageView";
+import { WelcomeLoadingFallback } from "@/components/pages/WelcomeLoadingFallback";
 
 export const dynamic = "force-static";
 
@@ -19,7 +20,7 @@ export default function HomePage() {
     <>
       <ExportPathMarker path="/" />
       <AppShell>
-        <Suspense fallback={null}>
+        <Suspense fallback={<WelcomeLoadingFallback />}>
           <WelcomePageView />
         </Suspense>
       </AppShell>
