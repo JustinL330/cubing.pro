@@ -13,7 +13,17 @@ async function getMetadata(path) {
 }
 
 test("auth and account pages render noindex robots metadata", async () => {
-  for (const path of ["/login/", "/auth/callback/", "/settings/", "/user/profile/", "/admin/users/"]) {
+  for (const path of [
+    "/login/",
+    "/auth/callback/",
+    "/settings/",
+    "/user/profile/",
+    "/user/kv-data/",
+    "/old-login/",
+    "/test/",
+    "/admin/users/",
+    "/admin/organizers/",
+  ]) {
     const { robots } = await getMetadata(path);
     assert.match(robots, /(?:^|,\s*)noindex(?:,|$)/, path);
     assert.match(robots, /(?:^|,\s*)nofollow(?:,|$)/, path);
@@ -25,4 +35,10 @@ test("public timer has description and is not noindexed", async () => {
   assert.doesNotMatch(robots, /noindex/i);
   assert.match(description, /Ao5\/Ao12/);
   assert.match(description, /scrambles/i);
+});
+
+// Public WCA search must not inherit the admin/account noindex policy.
+test("public WCA search remains indexable", async () => {
+  const { robots } = await getMetadata("/wca/players/");
+  assert.doesNotMatch(robots, /noindex/i);
 });
