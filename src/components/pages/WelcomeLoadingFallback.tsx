@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 /**
  * Meaningful HTML while the client-heavy welcome view streams.
  *
@@ -15,9 +17,9 @@ export function WelcomeLoadingFallback() {
       </p>
       <nav aria-label="常用工具">
         <ul>
-          <li><a href="/timer">魔方计时器</a></li>
-          <li><a href="/algs">魔方公式</a></li>
-          <li><a href="/wca/players">WCA 选手搜索</a></li>
+          <li><Link href="/timer">魔方计时器</Link></li>
+          <li><Link href="/algs">魔方公式</Link></li>
+          <li><Link href="/wca/players">WCA 选手搜索</Link></li>
         </ul>
       </nav>
     </section>
