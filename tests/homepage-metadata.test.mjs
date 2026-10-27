@@ -21,8 +21,12 @@ test("homepage description names real public features without claiming WCA affil
   assert.match(metadata, /并非 WCA 官方网站/);
 });
 
+test("root and nested welcome use one absolute branded title", () => {
+  assert.match(metadata, /const homepageTitle = "魔方练习与社区工具 · Cubing Pro"/);
+  assert.match(metadata, /title: \{ absolute: homepageTitle \}/);
+});
+
 test("social preview reuses the same title and description", () => {
-  assert.match(metadata, /title: homepageTitle,/);
   assert.match(metadata, /description: homepageDescription,/);
   assert.match(metadata, /openGraph:\s*\{\s*type: "website",\s*title: homepageTitle,\s*description: homepageDescription,/);
 });
