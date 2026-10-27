@@ -7,11 +7,16 @@ on:
       - "src/app/(main)/welcome/page.tsx"
       - "src/lib/homepageMetadata.ts"
       - "tests/homepage-metadata.test.mjs"
+      - "tests/homepage-metadata-rendered.test.mjs"
       - ".github/workflows/homepage-metadata.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: homepage-metadata-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   validate:
@@ -28,3 +33,45 @@ jobs:
       - run: npx eslint src/app/page.tsx "src/app/(main)/welcome/page.tsx" src/lib/homepageMetadata.ts
       - run: npx tsc --noEmit
       - run: npx next build
+
+  rendered-http:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      # /welcome currently has a separate non-ASCII ad image SSR bug (unmerged PR #6).
+      # Apply ONLY its existing image URL fix in this disposable test runner.
+      # Neither the PR #12 branch nor main includes this production change.
+      - name: Apply PR #6 SSR prerequisite to disposable checkout only
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin refs/pull/6/head
+          git show FETCH_HEAD:src/views/Advertisement/ads/cuberwenjun.tsx > src/views/Advertisement/ads/cuberwenjun.tsx
+          grep -Fq 'src={encodeURI(THUMBNAIL_IMG)}' src/views/Advertisement/ads/cuberwenjun.tsx
+          grep -Fq 'src={encodeURI(item.src)}' src/views/Advertisement/ads/cuberwenjun.tsx
+          git diff --name-only
+      - run: npx next build
+      - name: Start production Next.js server
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-homepage-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent --location --max-time 15 http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-homepage-next.log
+          exit 1
+      - name: Check root and welcome HTTP metadata
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/homepage-metadata-rendered.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-homepage-next.log || true
