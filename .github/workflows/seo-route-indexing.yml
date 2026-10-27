@@ -1,0 +1,33 @@
+name: SEO route indexing safeguards
+
+on:
+  pull_request:
+    paths:
+      - "src/app/(main)/**/page.tsx"
+      - "tests/seo-route-indexing.test.mjs"
+      - ".github/workflows/seo-route-indexing.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-indexing-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: node --test tests/seo-route-indexing.test.mjs
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      # Avoid unrelated HowToCook remote clone in npm prebuild.
+      - run: npx next build
