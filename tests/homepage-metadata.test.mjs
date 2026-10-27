@@ -35,3 +35,14 @@ test("no unverified canonical, hreflang, or fork deployment URL is published", (
   const code = metadata.replace(/\/\*[\s\S]*?\*\//g, "");
   assert.doesNotMatch(code, /metadataBase\s*:|alternates\s*:|canonical\s*:|hreflang|https?:\/\//i);
 });
+
+test("both welcome routes provide useful server-rendered Suspense fallback", () => {
+  const fallback = read("src/components/pages/WelcomeLoadingFallback.tsx");
+  for (const source of [home, welcome]) {
+    assert.match(source, /<Suspense fallback=\{<WelcomeLoadingFallback \/>\}>/);
+  }
+  assert.match(fallback, /<h1\b/);
+  for (const href of ["/timer", "/algs", "/wca/players"]) {
+    assert.ok(fallback.includes(`href="${href}"`));
+  }
+});
