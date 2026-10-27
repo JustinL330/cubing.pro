@@ -74,6 +74,7 @@ export async function generateMetadata({
   const route = matchRoute(pathname);
   // These routes are not public search results. noindex is not access control.
   const noIndex =
+    route?.tags?.includes("admin") ||
     route?.id.startsWith("admin-") ||
     route?.id.startsWith("user-") ||
     route?.id === "old-login" ||
