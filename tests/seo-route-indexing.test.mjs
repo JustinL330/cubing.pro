@@ -18,9 +18,11 @@ test("dedicated account, authentication and settings routes are noindex", () => 
 
 test("catch-all account and admin routes get noindex without blocking public routes", () => {
   const source = read("src/app/(main)/[...path]/page.tsx");
+  assert.match(source, /route\?\.tags\?\.includes\("admin"\)/);
   assert.match(source, /route\?\.id\.startsWith\("admin-"\)/);
   assert.match(source, /route\?\.id\.startsWith\("user-"\)/);
   assert.match(source, /route\?\.id === "old-login"/);
+  assert.match(source, /route\?\.id === "test"/);
   assert.match(source, /robots:\s*noIndex\s*\?\s*\{\s*index:\s*false,\s*follow:\s*false\s*\}\s*:\s*undefined/);
 });
 
