@@ -6,6 +6,7 @@ on:
       - "src/app/page.tsx"
       - "src/app/(main)/welcome/page.tsx"
       - "src/lib/homepageMetadata.ts"
+      - "src/components/pages/WelcomeLoadingFallback.tsx"
       - "tests/homepage-metadata.test.mjs"
       - "tests/homepage-metadata-rendered.test.mjs"
       - ".github/workflows/homepage-metadata.yml"
@@ -30,7 +31,7 @@ jobs:
           cache: npm
       - run: node --test tests/homepage-metadata.test.mjs
       - run: npm ci
-      - run: npx eslint src/app/page.tsx "src/app/(main)/welcome/page.tsx" src/lib/homepageMetadata.ts
+      - run: npx eslint src/app/page.tsx "src/app/(main)/welcome/page.tsx" src/lib/homepageMetadata.ts src/components/pages/WelcomeLoadingFallback.tsx
       - run: npx tsc --noEmit
       - run: npx next build
 
