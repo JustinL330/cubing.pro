@@ -9,6 +9,7 @@ on:
       - "src/components/pages/WelcomeLoadingFallback.tsx"
       - "tests/homepage-metadata.test.mjs"
       - "tests/homepage-metadata-rendered.test.mjs"
+      - "tests/homepage-nojs-browser.test.mjs"
       - ".github/workflows/homepage-metadata.yml"
   workflow_dispatch:
 
@@ -73,6 +74,15 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3000
         run: node --test tests/homepage-metadata-rendered.test.mjs
+      - name: Install isolated Chrome browser test dependency
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          google-chrome --version
+      - name: Verify visible fallback with JavaScript disabled
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/homepage-nojs-browser.test.mjs
       - name: Show server logs on failure
         if: failure()
         run: cat /tmp/cubing-homepage-next.log || true
