@@ -10,6 +10,7 @@ on:
       - "tests/homepage-metadata.test.mjs"
       - "tests/homepage-metadata-rendered.test.mjs"
       - "tests/homepage-nojs-browser.test.mjs"
+      - "tests/homepage-hydration-browser.test.mjs"
       - ".github/workflows/homepage-metadata.yml"
   workflow_dispatch:
 
@@ -83,6 +84,11 @@ jobs:
           BASE_URL: http://127.0.0.1:3000
           PLAYWRIGHT_CHANNEL: chrome
         run: node --test tests/homepage-nojs-browser.test.mjs
+      - name: Verify JavaScript hydration replaces the loading fallback
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/homepage-hydration-browser.test.mjs
       - name: Show server logs on failure
         if: failure()
         run: cat /tmp/cubing-homepage-next.log || true
