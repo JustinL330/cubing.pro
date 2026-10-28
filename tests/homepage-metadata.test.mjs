@@ -46,3 +46,15 @@ test("both welcome routes provide useful server-rendered Suspense fallback", () 
     assert.ok(fallback.includes(`href="${href}"`));
   }
 });
+
+test("server fallback is bilingual and explains no-JavaScript limitations", () => {
+  const fallback = read("src/components/pages/WelcomeLoadingFallback.tsx");
+  assert.match(fallback, /<p lang="en">/);
+  assert.match(fallback, /not an official WCA website/i);
+  assert.match(fallback, /<noscript>/);
+  assert.match(fallback, /互动工具需要 JavaScript/);
+  assert.match(fallback, /Interactive tools require JavaScript/);
+  for (const label of ["Cube timer", "Algorithms", "Player search"]) {
+    assert.ok(fallback.includes(label), `Missing English navigation label: ${label}`);
+  }
+});
