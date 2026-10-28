@@ -38,7 +38,7 @@ test("both welcome URLs expose readable navigation without JavaScript", { timeou
           );
 
           for (const href of ["/timer", "/algs", "/wca/players"]) {
-            const link = page.locator(`main a[href="${href}"]`);
+            const link = page.locator(`main a[href="${href}"], main a[href="${href}/"]`);
             assert.equal(await link.count(), 1, `${path}: expected one link to ${href}`);
             assert.equal(await link.isVisible(), true, `${path}: link to ${href} hidden without JS`);
           }
