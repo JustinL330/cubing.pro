@@ -42,6 +42,14 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
               `${label}: non-affiliation statement not visible`,
             );
 
+            const english = page.locator('main p[lang="en"]');
+            assert.equal(await english.isVisible(), true, `${label}: English introduction hidden without JS`);
+            assert.match(await english.innerText(), /not an official WCA website/i);
+
+            const noScriptNote = page.locator("main noscript p");
+            assert.equal(await noScriptNote.isVisible(), true, `${label}: missing no-JS notice`);
+            assert.match(await noScriptNote.innerText(), /Interactive tools require JavaScript/);
+
             const nav = page.locator("main nav");
             assert.equal(await nav.getAttribute("aria-label"), "常用工具", `${label}: navigation lacks an accessible name`);
             for (const href of ["/timer", "/algs", "/wca/players"]) {
@@ -49,6 +57,7 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
               assert.equal(await link.count(), 1, `${label}: expected one link to ${href}`);
               assert.equal(await link.isVisible(), true, `${label}: link to ${href} hidden without JS`);
               assert.ok((await link.innerText()).trim(), `${label}: link to ${href} has no accessible text`);
+              assert.match(await link.innerText(), /[A-Za-z]/, `${label}: link to ${href} lacks English label`);
             }
           } finally {
             await page.close();
