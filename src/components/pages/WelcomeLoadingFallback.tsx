@@ -15,13 +15,23 @@ export function WelcomeLoadingFallback() {
         在 Cubing Pro 使用魔方计时器进行打乱练习，浏览 WCA 选手与赛事资料，
         并查找魔方公式。本站并非 WCA 官方网站。
       </p>
+      <p lang="en">
+        Practice with a cube timer and scrambles, browse WCA competitors and
+        events, and find algorithms. This is not an official WCA website.
+      </p>
       <nav aria-label="常用工具">
         <ul>
-          <li><Link href="/timer">魔方计时器</Link></li>
-          <li><Link href="/algs">魔方公式</Link></li>
-          <li><Link href="/wca/players">WCA 选手搜索</Link></li>
+          <li><Link href="/timer">魔方计时器 / Cube timer</Link></li>
+          <li><Link href="/algs">魔方公式 / Algorithms</Link></li>
+          <li><Link href="/wca/players">WCA 选手搜索 / Player search</Link></li>
         </ul>
       </nav>
+      <noscript>
+        <p>
+          互动工具需要 JavaScript；未启用时仍可浏览上方公开链接。
+          <span lang="en"> Interactive tools require JavaScript; public links remain available.</span>
+        </p>
+      </noscript>
     </section>
   );
 }
