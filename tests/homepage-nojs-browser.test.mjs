@@ -51,13 +51,16 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
             assert.match(await noScriptNote.innerText(), /Interactive tools require JavaScript/);
 
             const nav = page.locator("main nav");
-            assert.equal(await nav.getAttribute("aria-label"), "常用工具", `${label}: navigation lacks an accessible name`);
+            assert.equal(await nav.getAttribute("aria-label"), "常用工具 / Popular tools", `${label}: navigation lacks bilingual accessible name`);
             for (const href of ["/timer", "/algs", "/wca/players"]) {
               const link = nav.locator(`a[href="${href}"], a[href="${href}/"]`);
               assert.equal(await link.count(), 1, `${label}: expected one link to ${href}`);
               assert.equal(await link.isVisible(), true, `${label}: link to ${href} hidden without JS`);
               assert.ok((await link.innerText()).trim(), `${label}: link to ${href} has no accessible text`);
               assert.match(await link.innerText(), /[A-Za-z]/, `${label}: link to ${href} lacks English label`);
+              const englishLabel = link.locator('span[lang="en"]');
+              assert.equal(await englishLabel.count(), 1, `${label}: English label for ${href} must declare its language`);
+              assert.match(await englishLabel.innerText(), /[A-Za-z]/, `${label}: English label for ${href} is empty`);
             }
           } finally {
             await page.close();
