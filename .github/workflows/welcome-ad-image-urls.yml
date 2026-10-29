@@ -35,9 +35,9 @@ jobs:
       # Compiling Next directly uses the checked-in recipes/tips JSON.
       - name: Next.js build (without external HowToCook sync)
         run: npx next build
-      - name: Start local Next.js server
+      - name: Start production Next.js server
         run: |
-          npm run dev -- --hostname 127.0.0.1 > /tmp/cubing-welcome-next.log 2>&1 &
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-welcome-next.log 2>&1 &
           for i in $(seq 1 90); do
             if curl --fail --silent http://127.0.0.1:3000/welcome/ > /dev/null; then
               exit 0
