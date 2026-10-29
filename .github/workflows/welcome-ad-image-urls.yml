@@ -6,6 +6,7 @@ on:
       - "src/views/Advertisement/ads/cuberwenjun.tsx"
       - "src/views/Advertisement/ads/cuberwenjun.json"
       - "tests/welcome-ad-image-urls.test.mjs"
+      - "tests/welcome-ad-images-browser.test.mjs"
       - ".github/workflows/welcome-ad-image-urls.yml"
   workflow_dispatch:
 
@@ -51,6 +52,15 @@ jobs:
           TEST_SERVER: "1"
           BASE_URL: http://127.0.0.1:3000
         run: node --test tests/welcome-ad-image-urls.test.mjs
+      - name: Install isolated Chrome browser test dependency
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          google-chrome --version
+      - name: Verify advertisement images decode in production Chrome
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/welcome-ad-images-browser.test.mjs
       - name: Show server logs on failure
         if: failure()
         run: cat /tmp/cubing-welcome-next.log || true
