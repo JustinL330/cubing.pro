@@ -53,3 +53,21 @@ test("root and welcome render matching public metadata over HTTP", async () => {
   const welcome = await fetchHomepage("/welcome/");
   assert.deepEqual(root, welcome);
 });
+
+
+test("server-rendered welcome links resolve to real same-origin public pages", async () => {
+  // A visible SSR link is only useful when its destination actually resolves.
+  // Use the running production server, not route-table string matching.
+  const origin = new URL(baseUrl).origin;
+  for (const path of ["/timer", "/algs", "/wca/players"]) {
+    const response = await fetch(new URL(path, baseUrl), { redirect: "follow" });
+    const resolved = new URL(response.url);
+    assert.equal(resolved.origin, origin, `${path}: navigation left the fork origin`);
+    assert.equal(response.status, 200, `${path}: linked public page returned HTTP ${response.status}`);
+    assert.match(
+      response.headers.get("content-type") ?? "",
+      /text\/html/i,
+      `${path}: destination did not serve HTML`,
+    );
+  }
+});
