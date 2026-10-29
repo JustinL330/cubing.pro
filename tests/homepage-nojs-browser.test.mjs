@@ -62,6 +62,25 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
               assert.equal(await englishLabel.count(), 1, `${label}: English label for ${href} must declare its language`);
               assert.match(await englishLabel.innerText(), /[A-Za-z]/, `${label}: English label for ${href} is empty`);
             }
+
+            // Visibility alone does not prove that no-JS visitors can reach
+            // these links using the keyboard. Check the actual browser tab order.
+            const links = nav.locator("a");
+            assert.equal(await links.count(), 3, `${label}: unexpected number of tool links`);
+            await links.nth(0).focus();
+            assert.equal(
+              await nav.locator("a:focus").getAttribute("href"),
+              await links.nth(0).getAttribute("href"),
+              `${label}: first tool link cannot receive keyboard focus`,
+            );
+            for (let index = 1; index < 3; index++) {
+              await page.keyboard.press("Tab");
+              assert.equal(
+                await nav.locator("a:focus").getAttribute("href"),
+                await links.nth(index).getAttribute("href"),
+                `${label}: keyboard tab order skips tool link ${index + 1}`,
+              );
+            }
           } finally {
             await page.close();
           }
