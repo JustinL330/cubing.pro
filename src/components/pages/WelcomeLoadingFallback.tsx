@@ -19,11 +19,11 @@ export function WelcomeLoadingFallback() {
         Practice with a cube timer and scrambles, browse WCA competitors and
         events, and find algorithms. This is not an official WCA website.
       </p>
-      <nav aria-label="常用工具">
+      <nav aria-label="常用工具 / Popular tools">
         <ul>
-          <li><Link href="/timer">魔方计时器 / Cube timer</Link></li>
-          <li><Link href="/algs">魔方公式 / Algorithms</Link></li>
-          <li><Link href="/wca/players">WCA 选手搜索 / Player search</Link></li>
+          <li><Link href="/timer">魔方计时器 / <span lang="en">Cube timer</span></Link></li>
+          <li><Link href="/algs">魔方公式 / <span lang="en">Algorithms</span></Link></li>
+          <li><Link href="/wca/players">WCA 选手搜索 / <span lang="en">Player search</span></Link></li>
         </ul>
       </nav>
       <noscript>
