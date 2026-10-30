@@ -43,13 +43,13 @@ test("Chrome respects private noindex and public indexability with and without J
               timeout: 90000,
             });
             assert.equal(response?.status(), 200, `${label}: expected HTTP 200`);
-            assert.match(response?.headers()["content-type"] ?? "", /text\\/html/i, label);
+            assert.match(response?.headers()["content-type"] ?? "", /text\/html/i, label);
 
             const robots = (await page.locator('meta[name="robots"]').first()
               .getAttribute("content").catch(() => null)) ?? "";
             if (privatePaths.includes(path)) {
-              assert.match(robots, /(?:^|,)\\s*noindex\\b/i, `${label}: noindex missing`);
-              assert.match(robots, /(?:^|,)\\s*nofollow\\b/i, `${label}: nofollow missing`);
+              assert.match(robots, /(?:^|,)\s*noindex\b/i, `${label}: noindex missing`);
+              assert.match(robots, /(?:^|,)\s*nofollow\b/i, `${label}: nofollow missing`);
             } else {
               assert.doesNotMatch(robots, /noindex/i, `${label}: public page noindexed`);
             }
@@ -57,7 +57,7 @@ test("Chrome respects private noindex and public indexability with and without J
             if (path === "/timer/") {
               const description = await page.locator('meta[name="description"]').first()
                 .getAttribute("content");
-              assert.match(description ?? "", /Ao5\\/Ao12/, `${label}: timer description missing`);
+              assert.match(description ?? "", /Ao5\/Ao12/, `${label}: timer description missing`);
             }
           } finally {
             await page.close();
