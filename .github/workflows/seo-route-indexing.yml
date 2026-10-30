@@ -6,6 +6,7 @@ on:
       - "src/app/(main)/**/page.tsx"
       - "tests/seo-route-indexing.test.mjs"
       - "tests/seo-route-rendered.test.mjs"
+      - "tests/seo-route-browser.test.mjs"
       - ".github/workflows/seo-route-indexing.yml"
   workflow_dispatch:
 
@@ -47,6 +48,15 @@ jobs:
         env:
           BASE_URL: http://127.0.0.1:3000
         run: node --test tests/seo-route-rendered.test.mjs
+      - name: Install isolated Chrome browser dependency
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          google-chrome --version
+      - name: Check robots metadata in Chrome with and without JavaScript
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/seo-route-browser.test.mjs
       - name: Show server logs on failure
         if: failure()
         run: cat /tmp/cubing-seo-next.log || true
