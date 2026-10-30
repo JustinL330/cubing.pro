@@ -42,30 +42,32 @@ test("advertisement images render and decode in production Chrome", { timeout: 1
       });
       assert.equal(loaded, true, `Image did not decode: ${item.src}`);
     }
-    // The original SSR failure surfaced on /welcome, not just on the detail page.
-    // Verify the carousel thumbnail also uses an encoded URL and decodes.
-    const welcomeResponse = await page.goto(new URL("/welcome/", baseUrl).href, {
-      waitUntil: "domcontentloaded",
-      timeout: 60000,
-    });
-    assert.equal(welcomeResponse?.status(), 200);
-    const thumbnail = page.locator('img[alt="俊改魔方"]');
-    await thumbnail.waitFor({ state: "attached", timeout: 60000 });
-    assert.equal(await thumbnail.count(), 1, "Expected one welcome carousel thumbnail");
-    assert.equal(
-      await thumbnail.getAttribute("src"),
-      encodeURI(images[0].src),
-      "Welcome thumbnail must use the encoded image path",
-    );
-    const thumbnailDecoded = await thumbnail.evaluate(async (element) => {
-      try {
-        await element.decode();
-        return element.naturalWidth > 0 && element.naturalHeight > 0;
-      } catch {
-        return false;
-      }
-    });
-    assert.equal(thumbnailDecoded, true, "Welcome carousel thumbnail did not decode");
+    // Both the root homepage and /welcome render the same advertisement carousel.
+    // Test each production route, rather than relying on the detail page alone.
+    for (const pathname of ["/", "/welcome/"]) {
+      const response = await page.goto(new URL(pathname, baseUrl).href, {
+        waitUntil: "domcontentloaded",
+        timeout: 60000,
+      });
+      assert.equal(response?.status(), 200, `${pathname} must render successfully`);
+      const thumbnail = page.locator('img[alt="俊改魔方"]');
+      await thumbnail.waitFor({ state: "attached", timeout: 60000 });
+      assert.equal(await thumbnail.count(), 1, `${pathname}: expected one carousel thumbnail`);
+      assert.equal(
+        await thumbnail.getAttribute("src"),
+        encodeURI(images[0].src),
+        `${pathname}: thumbnail must use the encoded image path`,
+      );
+      const thumbnailDecoded = await thumbnail.evaluate(async (element) => {
+        try {
+          await element.decode();
+          return element.naturalWidth > 0 && element.naturalHeight > 0;
+        } catch {
+          return false;
+        }
+      });
+      assert.equal(thumbnailDecoded, true, `${pathname}: thumbnail did not decode`);
+    }
   } finally {
     await browser.close();
   }
