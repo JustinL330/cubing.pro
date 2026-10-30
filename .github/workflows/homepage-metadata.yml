@@ -54,7 +54,16 @@ jobs:
       - name: Apply PR #6 SSR prerequisite to disposable checkout only
         run: |
           set -euo pipefail
+          # Pin the reviewed PR #6 prerequisite instead of silently testing
+          # against a moving pull-request head. If #6 changes, re-review it
+          # and update this SHA deliberately before trusting these results.
+          expected_pr6_sha=4ca67b981e83d3c3273bd3c9bd349b98102a2138
           git fetch --no-tags --depth=1 origin refs/pull/6/head
+          actual_pr6_sha=$(git rev-parse FETCH_HEAD)
+          if [ "$actual_pr6_sha" != "$expected_pr6_sha" ]; then
+            echo "::error::PR #6 head changed: expected $expected_pr6_sha, got $actual_pr6_sha. Re-review prerequisite before updating the pin."
+            exit 1
+          fi
           git show FETCH_HEAD:src/views/Advertisement/ads/cuberwenjun.tsx > src/views/Advertisement/ads/cuberwenjun.tsx
           grep -Fq 'src={encodeURI(THUMBNAIL_IMG)}' src/views/Advertisement/ads/cuberwenjun.tsx
           grep -Fq 'src={encodeURI(item.src)}' src/views/Advertisement/ads/cuberwenjun.tsx
