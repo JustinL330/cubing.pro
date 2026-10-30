@@ -1,0 +1,122 @@
+name: Homepage metadata
+
+on:
+  pull_request:
+    paths:
+      - "src/app/page.tsx"
+      - "src/app/(main)/welcome/page.tsx"
+      - "src/lib/homepageMetadata.ts"
+      - "src/components/pages/WelcomeLoadingFallback.tsx"
+      - "tests/homepage-metadata.test.mjs"
+      - "tests/homepage-metadata-rendered.test.mjs"
+      - "tests/homepage-nojs-browser.test.mjs"
+      - "tests/homepage-hydration-browser.test.mjs"
+      - ".github/workflows/homepage-metadata.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homepage-metadata-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: node --test tests/homepage-metadata.test.mjs
+      - run: npm ci
+      - run: npx eslint src/app/page.tsx "src/app/(main)/welcome/page.tsx" src/lib/homepageMetadata.ts src/components/pages/WelcomeLoadingFallback.tsx
+      - run: npx tsc --noEmit
+      - run: npx next build
+
+  rendered-http:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      # /welcome currently has a separate non-ASCII ad image SSR bug (unmerged PR #6).
+      # Apply ONLY its existing image URL fix in this disposable test runner.
+      # Neither the PR #12 branch nor main includes this production change.
+      - name: Apply PR #6 SSR prerequisite to disposable checkout only
+        run: |
+          set -euo pipefail
+          # Pin the reviewed PR #6 prerequisite instead of silently testing
+          # against a moving pull-request head. If #6 changes, re-review it
+          # and update this SHA deliberately before trusting these results.
+          expected_pr6_sha=4ca67b981e83d3c3273bd3c9bd349b98102a2138
+          git fetch --no-tags --depth=1 origin refs/pull/6/head
+          actual_pr6_sha=$(git rev-parse FETCH_HEAD)
+          if [ "$actual_pr6_sha" != "$expected_pr6_sha" ]; then
+            echo "::error::PR #6 head changed: expected $expected_pr6_sha, got $actual_pr6_sha. Re-review prerequisite before updating the pin."
+            exit 1
+          fi
+          # Never overwrite a changed file from the checkout with a whole
+          # file from another PR. The preimage must match the main version
+          # reviewed alongside this prerequisite. If main or PR #12 changes
+          # this file, fail closed and re-review the integration instead.
+          ad_file=src/views/Advertisement/ads/cuberwenjun.tsx
+          expected_base_blob=5a719bb75a81db899494e770a842ef3179200939
+          actual_base_blob=$(git hash-object "$ad_file")
+          if [ "$actual_base_blob" != "$expected_base_blob" ]; then
+            echo "::error::Advertisement source changed: expected base blob $expected_base_blob, got $actual_base_blob. Re-review the PR #6 integration before updating this guard."
+            exit 1
+          fi
+          git show FETCH_HEAD:"$ad_file" > "$ad_file"
+          # Assert that the resulting file is precisely the reviewed PR #6
+          # version, not merely a file containing two expected snippets.
+          expected_fixed_blob=027daa390203c767f3799824716a93a597f9ad56
+          actual_fixed_blob=$(git hash-object "$ad_file")
+          if [ "$actual_fixed_blob" != "$expected_fixed_blob" ]; then
+            echo "::error::PR #6 prerequisite file differs from reviewed blob $expected_fixed_blob (got $actual_fixed_blob)."
+            exit 1
+          fi
+          grep -Fq 'src={encodeURI(THUMBNAIL_IMG)}' "$ad_file"
+          grep -Fq 'src={encodeURI(item.src)}' "$ad_file"
+          git diff --name-only
+      - run: npx next build
+      - name: Start production Next.js server
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-homepage-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent --location --max-time 15 http://127.0.0.1:3000/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-homepage-next.log
+          exit 1
+      - name: Check root and welcome HTTP metadata
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/homepage-metadata-rendered.test.mjs
+      - name: Install isolated Chrome browser test dependency
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          google-chrome --version
+      - name: Verify visible fallback with JavaScript disabled
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/homepage-nojs-browser.test.mjs
+      - name: Verify JavaScript hydration replaces the loading fallback
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/homepage-hydration-browser.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-homepage-next.log || true
