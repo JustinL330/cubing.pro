@@ -34,7 +34,13 @@ test("both welcome URLs hydrate on desktop and mobile without duplicate headings
             assert.equal(response?.status(), 200, `${label}: unexpected HTTP status`);
 
             // PracticeHub is a client component, not the SSR fallback.
-            await page.getByText("Cubing Pro · Practice & Learn", { exact: true })
+            // Desktop/mobile variants can both exist in the DOM while only
+            // one is visible. A page-wide getByText is strict and fails when
+            // it resolves to both hidden and visible copies. Wait for a
+            // genuinely visible PracticeHub eyebrow within <main> instead.
+            await page.locator("main p:visible")
+              .filter({ hasText: "Cubing Pro · Practice & Learn" })
+              .first()
               .waitFor({ state: "visible", timeout: 60000 });
             await page.locator('main [aria-labelledby="welcome-loading-heading"]')
               .waitFor({ state: "detached", timeout: 30000 });
