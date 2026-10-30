@@ -5,6 +5,7 @@ import { SettingsPage } from "@/views/SettingsPage";
 
 export const metadata: Metadata = {
   title: "设置",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {

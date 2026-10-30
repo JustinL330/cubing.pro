@@ -1,0 +1,62 @@
+name: SEO route indexing safeguards
+
+on:
+  pull_request:
+    paths:
+      - "src/app/(main)/**/page.tsx"
+      - "tests/seo-route-indexing.test.mjs"
+      - "tests/seo-route-rendered.test.mjs"
+      - "tests/seo-route-browser.test.mjs"
+      - ".github/workflows/seo-route-indexing.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: seo-indexing-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: node --test tests/seo-route-indexing.test.mjs
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      # Avoid unrelated HowToCook remote clone in npm prebuild.
+      - run: npx next build
+      - name: Start production Next.js server
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-seo-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent --location --max-time 15 http://127.0.0.1:3000/timer/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-seo-next.log
+          exit 1
+      - name: Verify rendered robots and timer metadata
+        env:
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/seo-route-rendered.test.mjs
+      - name: Install isolated Chrome browser dependency
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          google-chrome --version
+      - name: Check robots metadata in Chrome with and without JavaScript
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/seo-route-browser.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-seo-next.log || true
