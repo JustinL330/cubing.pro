@@ -21,7 +21,7 @@ test("welcome and advertisement SSR plus all image assets respond successfully",
   skip: process.env.TEST_SERVER !== "1",
 }, async () => {
   const baseUrl = process.env.BASE_URL ?? "http://127.0.0.1:3000";
-  for (const path of ["/welcome/", "/advertisement/?key=cuberwenjun"]) {
+  for (const path of ["/", "/welcome/", "/advertisement/?key=cuberwenjun"]) {
     const response = await fetch(new URL(path, baseUrl));
     const html = await response.text();
     assert.equal(response.status, 200, `${path}: ${html.slice(0, 250)}`);
