@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: carousel-a11y-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   carousel:
     runs-on: ubuntu-latest
@@ -32,26 +36,47 @@ jobs:
         run: npm run lint
       - name: TypeScript
         run: npx tsc --noEmit
-      - name: Build without unrelated external HowToCook sync
-        run: npx next build
-      # PR #6 independently fixes the existing non-ASCII image URL /welcome
-      # SSR failure. Use its exact file only in this disposable CI workspace,
-      # so this PR stays independent and never silently merges PR #6.
-      - name: Apply pending PR #6 SSR prerequisite to test workspace only
+      # PR #6 independently fixes non-ASCII image URL SSR on /welcome.
+      # Only use its reviewed file in this disposable runner; never modify
+      # the PR #8 branch or main. Fail closed if either prerequisite changes.
+      - name: Apply pinned PR #6 SSR prerequisite in disposable checkout
         run: |
-          git fetch --depth=1 origin d22971b8feb1d49cf074efe2a3aab9e6423c935f
-          git show FETCH_HEAD:src/views/Advertisement/ads/cuberwenjun.tsx > src/views/Advertisement/ads/cuberwenjun.tsx
-          grep -q 'encodeURI(THUMBNAIL_IMG)' src/views/Advertisement/ads/cuberwenjun.tsx
-          grep -q 'encodeURI(item.src)' src/views/Advertisement/ads/cuberwenjun.tsx
+          set -euo pipefail
+          expected_pr6_sha=4ca67b981e83d3c3273bd3c9bd349b98102a2138
+          git fetch --no-tags --depth=1 origin refs/pull/6/head
+          actual_pr6_sha=$(git rev-parse FETCH_HEAD)
+          if [ "$actual_pr6_sha" != "$expected_pr6_sha" ]; then
+            echo "::error::PR #6 head changed ($actual_pr6_sha); re-review before updating the pin."
+            exit 1
+          fi
+          ad_file=src/views/Advertisement/ads/cuberwenjun.tsx
+          expected_base_blob=5a719bb75a81db899494e770a842ef3179200939
+          actual_base_blob=$(git hash-object "$ad_file")
+          if [ "$actual_base_blob" != "$expected_base_blob" ]; then
+            echo "::error::Advertisement source changed ($actual_base_blob); re-review the integration."
+            exit 1
+          fi
+          git show FETCH_HEAD:"$ad_file" > "$ad_file"
+          expected_fixed_blob=027daa390203c767f3799824716a93a597f9ad56
+          actual_fixed_blob=$(git hash-object "$ad_file")
+          if [ "$actual_fixed_blob" != "$expected_fixed_blob" ]; then
+            echo "::error::PR #6 file differs from reviewed blob ($actual_fixed_blob)."
+            exit 1
+          fi
+          grep -Fq 'src={encodeURI(THUMBNAIL_IMG)}' "$ad_file"
+          grep -Fq 'src={encodeURI(item.src)}' "$ad_file"
+          git diff --name-only
+      - name: Build production Next.js without unrelated HowToCook sync
+        run: npx next build
       - name: Install Chromium for browser integration
         run: |
           npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
-      - name: Start local Next.js
+      - name: Start production Next.js server
         run: |
-          npm run dev -- --hostname 127.0.0.1 > /tmp/cubing-carousel-next.log 2>&1 &
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-carousel-next.log 2>&1 &
           for i in $(seq 1 90); do
-            if curl --fail --silent --location --max-time 120 http://127.0.0.1:3000/welcome/ > /dev/null; then
+            if curl --fail --silent --location --max-time 15 http://127.0.0.1:3000/welcome/ > /dev/null; then
               exit 0
             fi
             sleep 2
