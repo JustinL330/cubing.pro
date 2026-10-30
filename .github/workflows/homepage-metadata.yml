@@ -64,9 +64,28 @@ jobs:
             echo "::error::PR #6 head changed: expected $expected_pr6_sha, got $actual_pr6_sha. Re-review prerequisite before updating the pin."
             exit 1
           fi
-          git show FETCH_HEAD:src/views/Advertisement/ads/cuberwenjun.tsx > src/views/Advertisement/ads/cuberwenjun.tsx
-          grep -Fq 'src={encodeURI(THUMBNAIL_IMG)}' src/views/Advertisement/ads/cuberwenjun.tsx
-          grep -Fq 'src={encodeURI(item.src)}' src/views/Advertisement/ads/cuberwenjun.tsx
+          # Never overwrite a changed file from the checkout with a whole
+          # file from another PR. The preimage must match the main version
+          # reviewed alongside this prerequisite. If main or PR #12 changes
+          # this file, fail closed and re-review the integration instead.
+          ad_file=src/views/Advertisement/ads/cuberwenjun.tsx
+          expected_base_blob=5a719bb75a81db899494e770a842ef3179200939
+          actual_base_blob=$(git hash-object "$ad_file")
+          if [ "$actual_base_blob" != "$expected_base_blob" ]; then
+            echo "::error::Advertisement source changed: expected base blob $expected_base_blob, got $actual_base_blob. Re-review the PR #6 integration before updating this guard."
+            exit 1
+          fi
+          git show FETCH_HEAD:"$ad_file" > "$ad_file"
+          # Assert that the resulting file is precisely the reviewed PR #6
+          # version, not merely a file containing two expected snippets.
+          expected_fixed_blob=027daa390203c767f3799824716a93a597f9ad56
+          actual_fixed_blob=$(git hash-object "$ad_file")
+          if [ "$actual_fixed_blob" != "$expected_fixed_blob" ]; then
+            echo "::error::PR #6 prerequisite file differs from reviewed blob $expected_fixed_blob (got $actual_fixed_blob)."
+            exit 1
+          fi
+          grep -Fq 'src={encodeURI(THUMBNAIL_IMG)}' "$ad_file"
+          grep -Fq 'src={encodeURI(item.src)}' "$ad_file"
           git diff --name-only
       - run: npx next build
       - name: Start production Next.js server
