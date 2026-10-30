@@ -45,8 +45,12 @@ test("Chrome respects private noindex and public indexability with and without J
             assert.equal(response?.status(), 200, `${label}: expected HTTP 200`);
             assert.match(response?.headers()["content-type"] ?? "", /text\/html/i, label);
 
-            const robots = (await page.locator('meta[name="robots"]').first()
-              .getAttribute("content").catch(() => null)) ?? "";
+            // Public pages may intentionally omit a robots tag. Do not wait
+            // for a nonexistent element and mistake the timeout for failure.
+            const robotsMeta = page.locator('meta[name="robots"]').first();
+            const robots = await robotsMeta.count()
+              ? (await robotsMeta.getAttribute("content")) ?? ""
+              : "";
             if (privatePaths.includes(path)) {
               assert.match(robots, /(?:^|,)\s*noindex\b/i, `${label}: noindex missing`);
               assert.match(robots, /(?:^|,)\s*nofollow\b/i, `${label}: nofollow missing`);
