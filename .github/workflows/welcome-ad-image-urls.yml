@@ -1,0 +1,66 @@
+name: Welcome advertisement URL regression
+
+on:
+  pull_request:
+    paths:
+      - "src/views/Advertisement/ads/cuberwenjun.tsx"
+      - "src/views/Advertisement/ads/cuberwenjun.json"
+      - "tests/welcome-ad-image-urls.test.mjs"
+      - "tests/welcome-ad-images-browser.test.mjs"
+      - ".github/workflows/welcome-ad-image-urls.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  welcome-ad-urls:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Verify advertisement URLs and local assets
+        run: node --test tests/welcome-ad-image-urls.test.mjs
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: ESLint
+        run: npm run lint
+      - name: TypeScript
+        run: npx tsc --noEmit
+      # The project's npm prebuild fetches HowToCook through a third-party proxy,
+      # which is unrelated to advertisement URLs and may return HTTP 403.
+      # Compiling Next directly uses the checked-in recipes/tips JSON.
+      - name: Next.js build (without external HowToCook sync)
+        run: npx next build
+      - name: Start production Next.js server
+        run: |
+          npm run start -- --hostname 127.0.0.1 > /tmp/cubing-welcome-next.log 2>&1 &
+          for i in $(seq 1 90); do
+            if curl --fail --silent http://127.0.0.1:3000/welcome/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/cubing-welcome-next.log
+          exit 1
+      - name: Verify welcome SSR and encoded image responses
+        env:
+          TEST_SERVER: "1"
+          BASE_URL: http://127.0.0.1:3000
+        run: node --test tests/welcome-ad-image-urls.test.mjs
+      - name: Install isolated Chrome browser test dependency
+        run: |
+          npm install --no-save --package-lock=false --no-audit --no-fund playwright@1.56.1
+          google-chrome --version
+      - name: Verify advertisement images decode in production Chrome
+        env:
+          BASE_URL: http://127.0.0.1:3000
+          PLAYWRIGHT_CHANNEL: chrome
+        run: node --test tests/welcome-ad-images-browser.test.mjs
+      - name: Show server logs on failure
+        if: failure()
+        run: cat /tmp/cubing-welcome-next.log || true
