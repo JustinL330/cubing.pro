@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { BrandLogo } from "@/components/layout/BrandLogo";
 import { HeaderUserActions } from "@/components/layout/HeaderUserActions";
@@ -247,15 +247,61 @@ function MobileNav({
 }) {
   const pathname = usePathname() ?? "";
   const { t } = useI18n();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
+
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
+    const focusFrame = requestAnimationFrame(() => closeButtonRef.current?.focus());
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && (document.activeElement === first || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !panel.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
     };
-  }, [open]);
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
+        // The mobile trigger becomes hidden when the viewport switches to desktop.
+        // Restore focus to a visible header link instead of a hidden button.
+        if (previousFocus.getClientRects().length > 0) {
+          previousFocus.focus();
+        } else {
+          document.querySelector<HTMLElement>('[data-app-header] a[href]')?.focus();
+        }
+      }
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -271,6 +317,9 @@ function MobileNav({
       />
       <Box
         as="nav"
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
         aria-label={t("nav.menu")}
         position="fixed"
         top="0"
@@ -298,6 +347,7 @@ function MobileNav({
             {t("nav.menu")}
           </Text>
           <IconButton
+            ref={closeButtonRef}
             aria-label={t("nav.close")}
             variant="ghost"
             size="xs"
@@ -350,9 +400,24 @@ function MobileNav({
 
 export function AppHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const closeMobileNav = useCallback(() => setMobileOpen(false), []);
   const { t } = useI18n();
 
   const nav = useMemo(() => buildMainNav(), []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    // Dismiss the mobile-only dialog if the viewport grows past Chakra's lg breakpoint.
+    // Otherwise a hidden mobile trigger can leave a focus-trapping overlay on desktop.
+    const desktopMedia = window.matchMedia("(min-width: 64rem)");
+    const dismissOnDesktop = () => {
+      if (desktopMedia.matches) closeMobileNav();
+    };
+    desktopMedia.addEventListener("change", dismissOnDesktop);
+    dismissOnDesktop();
+    return () => desktopMedia.removeEventListener("change", dismissOnDesktop);
+  }, [mobileOpen, closeMobileNav]);
 
   return (
     <>
@@ -405,6 +470,8 @@ export function AppHeader() {
               <HeaderUserActions />
               <IconButton
                 aria-label={t("nav.open")}
+                aria-haspopup="dialog"
+                aria-expanded={mobileOpen}
                 variant="outline"
                 size="xs"
                 display={{ base: "inline-flex", lg: "none" }}
@@ -418,7 +485,7 @@ export function AppHeader() {
       </Box>
       <MobileNav
         open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
+        onClose={closeMobileNav}
         nav={nav}
       />
     </>
