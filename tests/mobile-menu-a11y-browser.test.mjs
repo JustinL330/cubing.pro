@@ -77,3 +77,25 @@ test("mobile: close button restores focus and releases scroll lock", async () =>
     await page.close();
   }
 });
+
+test("mobile: resizing to desktop dismisses dialog and moves focus to a visible header link", async () => {
+  const page = await browser.newPage({ viewport: { width: 375, height: 812 } });
+  try {
+    const { dialog, previousOverflow } = await openMobileMenu(page);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await dialog.waitFor({ state: "detached", timeout: 8000 });
+    await page.waitForFunction((expected) => document.body.style.overflow === expected, previousOverflow);
+    assert.equal(
+      await page.evaluate(() => {
+        const focused = document.activeElement;
+        return focused instanceof HTMLAnchorElement &&
+          focused.closest("[data-app-header]") !== null &&
+          focused.getClientRects().length > 0;
+      }),
+      true,
+      "Focus should return to a visible header link, not the hidden mobile trigger",
+    );
+  } finally {
+    await page.close();
+  }
+});
