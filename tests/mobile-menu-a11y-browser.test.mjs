@@ -13,6 +13,7 @@ async function openMobileMenu(page) {
   assert.equal(response?.status(), 200, "Timer page should load before testing the menu");
   // Wait for client hydration, not just server-rendered HTML, before clicking.
   await page.waitForFunction(() => document.documentElement.lang === "en-US");
+  const previousOverflow = await page.evaluate(() => document.body.style.overflow);
   const trigger = page.locator('header button').filter({ hasText: "☰" });
   await trigger.waitFor();
   await trigger.click();
@@ -22,7 +23,7 @@ async function openMobileMenu(page) {
     document.activeElement?.getAttribute("aria-label") ===
     document.querySelector('[role="dialog"] button[aria-label]')?.getAttribute("aria-label"),
   );
-  return { trigger, dialog };
+  return { trigger, dialog, previousOverflow };
 }
 
 test("mobile: Escape closes menu and restores trigger focus", async () => {
@@ -59,13 +60,13 @@ test("mobile: Shift+Tab and Tab stay inside the navigation dialog", async () => 
 test("mobile: close button restores focus and releases scroll lock", async () => {
   const page = await browser.newPage({ viewport: { width: 375, height: 812 } });
   try {
-    const { trigger, dialog } = await openMobileMenu(page);
+    const { trigger, dialog, previousOverflow } = await openMobileMenu(page);
     assert.equal(await dialog.getAttribute("aria-modal"), "true");
     assert.equal(await page.evaluate(() => document.body.style.overflow), "hidden");
 
     await dialog.locator("button[aria-label]").first().click();
     await dialog.waitFor({ state: "detached" });
-    await page.waitForFunction(() => document.body.style.overflow !== "hidden");
+    await page.waitForFunction((expected) => document.body.style.overflow === expected, previousOverflow);
     assert.equal(await trigger.evaluate((el) => el === document.activeElement), true);
   } finally {
     await page.close();
