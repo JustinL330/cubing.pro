@@ -55,3 +55,19 @@ test("mobile: Shift+Tab and Tab stay inside the navigation dialog", async () => 
     await page.close();
   }
 });
+
+test("mobile: close button restores focus and releases scroll lock", async () => {
+  const page = await browser.newPage({ viewport: { width: 375, height: 812 } });
+  try {
+    const { trigger, dialog } = await openMobileMenu(page);
+    assert.equal(await dialog.getAttribute("aria-modal"), "true");
+    assert.equal(await page.evaluate(() => document.body.style.overflow), "hidden");
+
+    await dialog.locator("button[aria-label]").first().click();
+    await dialog.waitFor({ state: "detached" });
+    await page.waitForFunction(() => document.body.style.overflow !== "hidden");
+    assert.equal(await trigger.evaluate((el) => el === document.activeElement), true);
+  } finally {
+    await page.close();
+  }
+});
