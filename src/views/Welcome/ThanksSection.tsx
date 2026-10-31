@@ -12,9 +12,10 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useI18n } from "@/contexts/I18nProvider";
+import { fetchAvatarThumbnails, getAvatarFetchIds } from "@/views/Welcome/thanksAvatarRequests";
 import { getAcknowledgments } from "@/services/cubing-pro/public/orgs";
 import type { Thank } from "@/services/cubing-pro/public/types";
 import { apiGetWCAPersonProfile } from "@/services/cubing-pro/wca/wca_api";
@@ -53,6 +54,8 @@ function getAvatarUrl(person: ThanksPerson, avatarCache: Record<string, string>)
 export function ThanksSection({ data }: { data?: Thank[] }) {
   const { t, tf } = useI18n();
   const [expanded, setExpanded] = useState(false);
+  const requestedAvatarIds = useRef(new Set<string>());
+  const avatarRequestQueue = useRef<Promise<void>>(Promise.resolve());
   const [avatarCache, setAvatarCache] = useState<Record<string, string>>({});
   const [thanksList, setThanksList] = useState<ThanksPerson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,18 +78,27 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
   const displayList = expanded ? thanksList : thanksList.slice(0, MAX_VISIBLE);
 
   useEffect(() => {
-    const toFetch = thanksList.filter((p) => !p.avatar && p.wcaID?.length === 10);
-    for (const person of toFetch) {
-      void apiGetWCAPersonProfile(person.wcaID)
-        .then((res) => {
-          const url = res.person?.avatar?.thumb_url;
-          if (url) {
-            setAvatarCache((prev) => ({ ...prev, [person.wcaID]: url }));
-          }
-        })
-        .catch(() => {});
-    }
-  }, [thanksList]);
+    // Do not request avatars for sponsors hidden behind "Show more".
+    const ids = getAvatarFetchIds(
+      thanksList,
+      expanded,
+      MAX_VISIBLE,
+      requestedAvatarIds.current,
+    );
+    for (const id of ids) requestedAvatarIds.current.add(id);
+
+    // Serialize expansion batches so rapid toggles cannot exceed four concurrent requests.
+    avatarRequestQueue.current = avatarRequestQueue.current.then(() => fetchAvatarThumbnails(
+      ids,
+      async (wcaID) => {
+        const res = await apiGetWCAPersonProfile(wcaID);
+        return res.person?.avatar?.thumb_url;
+      },
+      (wcaID, url) => {
+        setAvatarCache((prev) => ({ ...prev, [wcaID]: url }));
+      },
+    ));
+  }, [thanksList, expanded]);
 
   if (loading || thanksList.length === 0) return null;
 
