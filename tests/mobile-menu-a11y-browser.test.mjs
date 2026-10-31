@@ -16,9 +16,12 @@ async function openMobileMenu(page) {
   const previousOverflow = await page.evaluate(() => document.body.style.overflow);
   const trigger = page.locator('header button').filter({ hasText: "☰" });
   await trigger.waitFor();
+  assert.equal(await trigger.getAttribute("aria-haspopup"), "dialog");
+  assert.equal(await trigger.getAttribute("aria-expanded"), "false");
   await trigger.click();
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ timeout: 8000 });
+  assert.equal(await trigger.getAttribute("aria-expanded"), "true");
   await page.waitForFunction(() =>
     document.activeElement?.getAttribute("aria-label") ===
     document.querySelector('[role="dialog"] button[aria-label]')?.getAttribute("aria-label"),
@@ -33,6 +36,7 @@ test("mobile: Escape closes menu and restores trigger focus", async () => {
     assert.equal(await dialog.count(), 1);
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "detached" });
+    assert.equal(await trigger.getAttribute("aria-expanded"), "false");
     assert.equal(await trigger.evaluate((el) => el === document.activeElement), true);
   } finally {
     await page.close();
@@ -67,6 +71,7 @@ test("mobile: close button restores focus and releases scroll lock", async () =>
     await dialog.locator("button[aria-label]").first().click();
     await dialog.waitFor({ state: "detached" });
     await page.waitForFunction((expected) => document.body.style.overflow === expected, previousOverflow);
+    assert.equal(await trigger.getAttribute("aria-expanded"), "false");
     assert.equal(await trigger.evaluate((el) => el === document.activeElement), true);
   } finally {
     await page.close();
