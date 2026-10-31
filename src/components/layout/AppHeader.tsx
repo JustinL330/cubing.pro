@@ -450,6 +450,8 @@ export function AppHeader() {
               <HeaderUserActions />
               <IconButton
                 aria-label={t("nav.open")}
+                aria-haspopup="dialog"
+                aria-expanded={mobileOpen}
                 variant="outline"
                 size="xs"
                 display={{ base: "inline-flex", lg: "none" }}
