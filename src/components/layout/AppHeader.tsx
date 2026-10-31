@@ -292,7 +292,13 @@ function MobileNav({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = previousOverflow;
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
-        previousFocus.focus();
+        // The mobile trigger becomes hidden when the viewport switches to desktop.
+        // Restore focus to a visible header link instead of a hidden button.
+        if (previousFocus.getClientRects().length > 0) {
+          previousFocus.focus();
+        } else {
+          document.querySelector<HTMLElement>('[data-app-header] a[href]')?.focus();
+        }
       }
     };
   }, [open, onClose]);
@@ -398,6 +404,20 @@ export function AppHeader() {
   const { t } = useI18n();
 
   const nav = useMemo(() => buildMainNav(), []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    // Dismiss the mobile-only dialog if the viewport grows past Chakra's lg breakpoint.
+    // Otherwise a hidden mobile trigger can leave a focus-trapping overlay on desktop.
+    const desktopMedia = window.matchMedia("(min-width: 64rem)");
+    const dismissOnDesktop = () => {
+      if (desktopMedia.matches) closeMobileNav();
+    };
+    desktopMedia.addEventListener("change", dismissOnDesktop);
+    dismissOnDesktop();
+    return () => desktopMedia.removeEventListener("change", dismissOnDesktop);
+  }, [mobileOpen, closeMobileNav]);
 
   return (
     <>
