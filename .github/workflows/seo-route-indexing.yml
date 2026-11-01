@@ -19,7 +19,9 @@ concurrency:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    # The job runs Playwright 1.56.1 with runner Chrome; keep the
+    # browser environment stable instead of tracking ubuntu-latest.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
