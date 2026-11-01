@@ -38,3 +38,10 @@ test("offscreen slides are inert and controls have keyboard-visible focus", () =
   assert.match(css, /\.ad-carousel-dot:focus-visible/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
 });
+
+test("background tabs stop automatic rotation without changing manual preference", () => {
+  assert.match(component, /document\.addEventListener\("visibilitychange", syncVisibility\)/);
+  assert.match(component, /setPageVisible\(!document\.hidden\)/);
+  assert.match(component, /playing && pageVisible && !hovered && !focusWithin/);
+  assert.match(component, /document\.removeEventListener\("visibilitychange", syncVisibility\)/);
+});
