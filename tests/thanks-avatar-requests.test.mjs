@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { fetchAvatarThumbnails, getAvatarFetchIds } from "../src/views/Welcome/thanksAvatarRequests.ts";
+import { fetchAvatarThumbnails, getAvatarFetchIds, isValidWcaId } from "../src/views/Welcome/thanksAvatarRequests.ts";
 
 const person = (i) => ({ wcaID: `2026TEST${String(i).padStart(2, "0")}` });
 
@@ -93,4 +93,18 @@ test("invalid or excessive concurrency never exceeds four avatar requests", asyn
     assert.equal(inFlight, 0);
     assert.equal(peak, expectedPeak, `bounded workers for concurrency ${concurrency}`);
   }
+});
+
+test("malformed sponsor WCA IDs are neither fetched nor linked", () => {
+  const valid = "2026TEST01";
+  const invalid = ["2026TE!T01", "2026test01", "2026TEST0X", "2026TEST1", "2026TEST011", "----------"];
+  assert.equal(isValidWcaId(valid), true);
+  for (const id of invalid) {
+    assert.equal(isValidWcaId(id), false, `must reject ${id}`);
+  }
+  const people = [{ wcaID: valid }, ...invalid.map((wcaID) => ({ wcaID }))];
+  assert.deepEqual(getAvatarFetchIds(people, true, 12, new Set()), [valid]);
+  const section = readFileSync(new URL("../src/views/Welcome/ThanksSection.tsx", import.meta.url), "utf8");
+  assert.match(section, /isValidWcaId\(person\.wcaID\)/);
+  assert.doesNotMatch(section, /wcaID\.length === 10/);
 });
