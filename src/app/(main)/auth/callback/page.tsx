@@ -6,6 +6,7 @@ import { AuthCallbackPage } from "@/views/admin/AuthCallbackPage";
 
 export const metadata: Metadata = {
   title: "登录回调",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {

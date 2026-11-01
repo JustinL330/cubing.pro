@@ -6,6 +6,7 @@ import { LoginPage } from "@/views/admin/LoginPage";
 
 export const metadata: Metadata = {
   title: "WCA 登录",
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {
