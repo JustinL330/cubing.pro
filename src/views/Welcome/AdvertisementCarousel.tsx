@@ -19,6 +19,7 @@ export function AdvertisementCarousel() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [focusWithin, setFocusWithin] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -28,9 +29,19 @@ export function AdvertisementCarousel() {
     return () => media.removeEventListener("change", sync);
   }, []);
 
+  // Background tabs should not rotate slides or consume timers. Visibility
+  // changes do not override the visitor's explicit pause/play preference.
+  useEffect(() => {
+    const syncVisibility = () => setPageVisible(!document.hidden);
+    document.addEventListener("visibilitychange", syncVisibility);
+    syncVisibility();
+    return () => document.removeEventListener("visibilitychange", syncVisibility);
+  }, []);
+
   const playing =
     motionChoice === "play" || (motionChoice === "auto" && !reducedMotion);
-  const shouldAdvance = adList.length > 1 && playing && !hovered && !focusWithin;
+  const shouldAdvance =
+    adList.length > 1 && playing && pageVisible && !hovered && !focusWithin;
 
   useEffect(() => {
     if (!shouldAdvance) return;
