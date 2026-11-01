@@ -39,7 +39,9 @@ jobs:
 
   rendered-http:
     needs: validate
-    runs-on: ubuntu-latest
+    # Keep production Chrome/Playwright 1.56.1 on a known-compatible image;
+    # ubuntu-latest can move to a newer image independently of this PR.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
