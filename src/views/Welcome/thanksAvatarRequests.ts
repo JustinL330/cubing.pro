@@ -32,7 +32,12 @@ export async function fetchAvatarThumbnails(
   concurrency = 4,
 ): Promise<void> {
   let next = 0;
-  const workerCount = Math.min(ids.length, Math.max(1, Math.floor(concurrency)));
+  // Keep the documented four-request ceiling even if a future caller passes
+  // a large, infinite or non-numeric concurrency value.
+  const boundedConcurrency = Number.isFinite(concurrency)
+    ? Math.min(4, Math.max(1, Math.floor(concurrency)))
+    : 4;
+  const workerCount = Math.min(ids.length, boundedConcurrency);
   await Promise.all(
     Array.from({ length: workerCount }, async () => {
       while (next < ids.length) {
