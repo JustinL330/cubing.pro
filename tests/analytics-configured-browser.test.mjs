@@ -101,6 +101,14 @@ test("configured GA4 respects consent and sanitizes page views", { timeout: 1800
     assert.equal(await page.locator('script[data-cubing-analytics="true"]').count(), 0);
     assert.equal(await page.evaluate((key) => localStorage.getItem(key), consentKey), "granted");
 
+    // A hard reload can emit `load` before Next.js has hydrated and patched
+    // the History API. Wait for the client-only configured preferences state
+    // before testing the private-to-public SPA transition.
+    await page.waitForFunction(() =>
+      Array.from(document.querySelectorAll("button")).some(
+        (button) => button.textContent?.trim() === "Decline analytics" && !button.disabled,
+      ),
+    );
     await page.evaluate(() => history.pushState({}, "", "/timer/?secret=back"));
     await page.waitForFunction(() => (window.dataLayer ?? []).filter((row) => row[0] === "event" && row[1] === "page_view").length === 1);
     spaViews = pageViews(await page.evaluate(() => window.dataLayer ?? []));
