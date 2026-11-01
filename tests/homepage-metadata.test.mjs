@@ -62,3 +62,17 @@ test("server fallback is bilingual and explains no-JavaScript limitations", () =
     );
   }
 });
+
+test("bilingual SSR fallback declares Chinese and English language boundaries", () => {
+  const fallback = read("src/components/pages/WelcomeLoadingFallback.tsx");
+  assert.match(fallback, /<h1[^>]*lang="zh-CN"/);
+  assert.match(fallback, /<p lang="zh-CN">\s*在 Cubing Pro/);
+  assert.match(fallback, /<p lang="en">/);
+  assert.match(fallback, /<noscript>\s*<p lang="zh-CN">/);
+  for (const chinese of ["魔方计时器", "魔方公式", "WCA 选手搜索"]) {
+    assert.ok(
+      fallback.includes(`<span lang="zh-CN">${chinese}</span>`),
+      `Missing Chinese language marker for navigation label: ${chinese}`,
+    );
+  }
+});
