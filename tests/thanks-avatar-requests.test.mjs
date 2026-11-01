@@ -63,3 +63,34 @@ test("component serializes expansion batches instead of starting parallel worker
   assert.match(component, /avatarRequestQueue\.current = avatarRequestQueue\.current\.then\(\(\) => fetchAvatarThumbnails\(/);
   assert.match(component, /\[thanksList, expanded\]/);
 });
+
+test("invalid or excessive concurrency never exceeds four avatar requests", async () => {
+  const ids = Array.from({ length: 9 }, (_, i) => person(i).wcaID);
+  for (const [concurrency, expectedPeak] of [
+    [1000, 4],
+    [Infinity, 4],
+    [NaN, 4],
+    [0, 1],
+    [-10, 1],
+  ]) {
+    let inFlight = 0;
+    let peak = 0;
+    let completed = 0;
+    await fetchAvatarThumbnails(
+      ids,
+      async () => {
+        inFlight += 1;
+        peak = Math.max(peak, inFlight);
+        await new Promise((resolve) => setTimeout(resolve, 2));
+        inFlight -= 1;
+        completed += 1;
+        return undefined;
+      },
+      () => {},
+      concurrency,
+    );
+    assert.equal(completed, ids.length, `all requests processed for concurrency ${concurrency}`);
+    assert.equal(inFlight, 0);
+    assert.equal(peak, expectedPeak, `bounded workers for concurrency ${concurrency}`);
+  }
+});
