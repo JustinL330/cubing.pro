@@ -33,7 +33,7 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
             });
             assert.equal(response?.status(), 200, `${label}: unexpected HTTP status`);
 
-            const heading = page.locator("main h1", { hasText: "魔方练习与社区工具" });
+            const heading = page.locator('main h1[lang="zh-CN"]', { hasText: "魔方练习与社区工具" });
             assert.equal(await heading.count(), 1, `${label}: missing or duplicated h1`);
             assert.equal(await heading.isVisible(), true, `${label}: h1 not visible without JS`);
             assert.equal(
@@ -42,6 +42,9 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
               `${label}: non-affiliation statement not visible`,
             );
 
+            const chinese = page.locator('main section > p[lang="zh-CN"]');
+            assert.equal(await chinese.isVisible(), true, `${label}: Chinese introduction lacks a visible language-marked paragraph`);
+
             const english = page.locator('main p[lang="en"]');
             assert.equal(await english.isVisible(), true, `${label}: English introduction hidden without JS`);
             assert.match(await english.innerText(), /not an official WCA website/i);
@@ -49,6 +52,7 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
             const noScriptNote = page.locator("main noscript p");
             assert.equal(await noScriptNote.isVisible(), true, `${label}: missing no-JS notice`);
             assert.match(await noScriptNote.innerText(), /Interactive tools require JavaScript/);
+            assert.equal(await noScriptNote.getAttribute("lang"), "zh-CN", `${label}: no-JS notice lacks Chinese language marker`);
 
             const nav = page.locator("main nav");
             assert.equal(await nav.getAttribute("aria-label"), "常用工具 / Popular tools", `${label}: navigation lacks bilingual accessible name`);
@@ -58,6 +62,9 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
               assert.equal(await link.isVisible(), true, `${label}: link to ${href} hidden without JS`);
               assert.ok((await link.innerText()).trim(), `${label}: link to ${href} has no accessible text`);
               assert.match(await link.innerText(), /[A-Za-z]/, `${label}: link to ${href} lacks English label`);
+              const chineseLabel = link.locator('span[lang="zh-CN"]');
+              assert.equal(await chineseLabel.count(), 1, `${label}: Chinese label for ${href} must declare its language`);
+              assert.match(await chineseLabel.innerText(), /[\u4e00-\u9fff]/, `${label}: Chinese label for ${href} is empty`);
               const englishLabel = link.locator('span[lang="en"]');
               assert.equal(await englishLabel.count(), 1, `${label}: English label for ${href} must declare its language`);
               assert.match(await englishLabel.innerText(), /[A-Za-z]/, `${label}: English label for ${href} is empty`);
