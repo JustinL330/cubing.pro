@@ -80,3 +80,40 @@ test("hover and keyboard focus pause autoplay, with Japanese controls on mobile"
     await context.close();
   }
 });
+
+test("background tab visibility pauses autoplay and preserves explicit pause", async () => {
+  const { context, page } = await openWelcome();
+  try {
+    const track = page.locator(".ad-carousel-track");
+    const toggle = page.locator(".ad-carousel-toggle");
+    await page.waitForFunction(() => document.querySelector(".ad-carousel-track")?.getAttribute("aria-live") === "off");
+
+    // Simulate a visibility event deterministically without waiting for a
+    // real browser window to be backgrounded in a headless CI runner.
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, value: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.waitForFunction(() => document.querySelector(".ad-carousel-track")?.getAttribute("aria-live") === "polite");
+    assert.equal(await toggle.getAttribute("aria-label"), "Pause automatic rotation");
+
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, value: false });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await page.waitForFunction(() => document.querySelector(".ad-carousel-track")?.getAttribute("aria-live") === "off");
+
+    await toggle.click();
+    assert.equal(await toggle.getAttribute("aria-label"), "Resume automatic rotation");
+    await page.evaluate(() => {
+      Object.defineProperty(document, "hidden", { configurable: true, value: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+      Object.defineProperty(document, "hidden", { configurable: true, value: false });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    assert.equal(await toggle.getAttribute("aria-label"), "Resume automatic rotation");
+    assert.equal(await track.getAttribute("aria-live"), "polite");
+  } finally {
+    await context.close();
+  }
+});
