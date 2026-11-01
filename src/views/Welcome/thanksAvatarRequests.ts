@@ -4,6 +4,11 @@
  */
 export type AvatarCandidate = { wcaID: string; avatar?: string };
 
+/** WCA IDs are four year digits, four uppercase letters and two digits. */
+export function isValidWcaId(wcaID: string): boolean {
+  return /^\d{4}[A-Z]{4}\d{2}$/.test(wcaID);
+}
+
 export function getAvatarFetchIds(
   people: readonly AvatarCandidate[],
   expanded: boolean,
@@ -15,7 +20,7 @@ export function getAvatarFetchIds(
   for (const person of visible) {
     if (
       !person.avatar &&
-      person.wcaID?.length === 10 &&
+      isValidWcaId(person.wcaID) &&
       !alreadyRequested.has(person.wcaID)
     ) {
       ids.add(person.wcaID);
