@@ -1,6 +1,7 @@
 // Browser regression for the WCA Show all policy, with a deterministic local API mock.
-// Run against a Next.js dev server started with
-// NEXT_PUBLIC_API_BASE=http://127.0.0.1:3000/v3/cube-api
+// Run against a production Next.js server built with
+// NEXT_PUBLIC_API_BASE=http://127.0.0.1:3000/v3/cube-api.
+// PR #6's SSR prerequisite is applied only in the disposable CI checkout.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { chromium } from "playwright";
