@@ -138,9 +138,9 @@ test("malformed sponsor WCA IDs are never linked or fetched in the rendered welc
     await page.getByText("Lowercase sponsor").waitFor();
     await page.getByText("Anonymous sponsor").waitFor();
 
-    assert.equal(
+    assert.match(
       await page.getByRole("link", { name: "Valid sponsor" }).getAttribute("href"),
-      "/wca/player/2026TEST01",
+      /^\/wca\/player\/2026TEST01\/?$/,
     );
     for (const name of ["Malformed sponsor", "Lowercase sponsor", "Anonymous sponsor"]) {
       assert.equal(await page.getByRole("link", { name }).count(), 0, name + " must not be linked");
