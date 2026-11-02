@@ -96,3 +96,65 @@ test("welcome loads only visible WCA avatars, then loads remaining once with at 
     await browser.close();
   }
 });
+
+test("malformed sponsor WCA IDs are never linked or fetched in the rendered welcome page", { timeout: 180000 }, async () => {
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await context.newPage();
+  const requested = [];
+  const sponsors = [
+    { wcaID: "2026TEST01", nickname: "Valid sponsor", amount: 100, avatar: "" },
+    { wcaID: "2026TE!T02", nickname: "Malformed sponsor", amount: 101, avatar: "" },
+    { wcaID: "2026test03", nickname: "Lowercase sponsor", amount: 102, avatar: "" },
+    { wcaID: "", nickname: "Anonymous sponsor", amount: 103, avatar: "" },
+  ];
+
+  try {
+    await page.addInitScript(() => {
+      localStorage.setItem("cubing_pro_locale", "en-US");
+    });
+    await page.route("**/public/acknowledgments*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(sponsors),
+      });
+    });
+    await page.route("**/api/v0/persons/*", async (route) => {
+      requested.push(new URL(route.request().url()).pathname.split("/").pop());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ person: { avatar: { thumb_url: "/avatar.png" } } }),
+      });
+    });
+
+    const response = await page.goto(baseUrl + "/welcome/", {
+      waitUntil: "domcontentloaded",
+      timeout: 120000,
+    });
+    assert.equal(response?.status(), 200);
+    await page.getByText("Malformed sponsor").waitFor({ timeout: 60000 });
+    await page.getByText("Lowercase sponsor").waitFor();
+    await page.getByText("Anonymous sponsor").waitFor();
+
+    assert.equal(
+      await page.getByRole("link", { name: "Valid sponsor" }).getAttribute("href"),
+      "/wca/player/2026TEST01",
+    );
+    for (const name of ["Malformed sponsor", "Lowercase sponsor", "Anonymous sponsor"]) {
+      assert.equal(await page.getByRole("link", { name }).count(), 0, name + " must not be linked");
+    }
+
+    // A valid ID should be requested once; invalid IDs must never reach the WCA API.
+    const deadline = Date.now() + 30000;
+    while (requested.length === 0 && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    await page.waitForTimeout(300);
+    assert.deepEqual(requested, ["2026TEST01"]);
+  } finally {
+    await context.close();
+    await browser.close();
+  }
+});
