@@ -12,9 +12,10 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useI18n } from "@/contexts/I18nProvider";
+import { fetchAvatarThumbnails, getAvatarFetchIds, isValidWcaId } from "@/views/Welcome/thanksAvatarRequests";
 import { getAcknowledgments } from "@/services/cubing-pro/public/orgs";
 import type { Thank } from "@/services/cubing-pro/public/types";
 import { apiGetWCAPersonProfile } from "@/services/cubing-pro/wca/wca_api";
@@ -30,10 +31,6 @@ type ThanksPerson = {
   amount: number;
   avatar?: string;
 };
-
-function hasValidWcaId(wcaID: string): boolean {
-  return !!wcaID && wcaID !== "-" && wcaID.length === 10;
-}
 
 function thankToThanksPerson(t: Thank): ThanksPerson {
   return {
@@ -53,40 +50,59 @@ function getAvatarUrl(person: ThanksPerson, avatarCache: Record<string, string>)
 export function ThanksSection({ data }: { data?: Thank[] }) {
   const { t, tf } = useI18n();
   const [expanded, setExpanded] = useState(false);
+  const requestedAvatarIds = useRef(new Set<string>());
+  const avatarRequestQueue = useRef<Promise<void>>(Promise.resolve());
   const [avatarCache, setAvatarCache] = useState<Record<string, string>>({});
   const [thanksList, setThanksList] = useState<ThanksPerson[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // A slower previous request must not replace a newer data prop or update
+    // state after this section unmounts.
+    let active = true;
     const fetchData = async () => {
       try {
         const list = data ?? (await getAcknowledgments());
+        if (!active) return;
         setThanksList(list.map(thankToThanksPerson));
       } catch {
+        if (!active) return;
         setThanksList([]);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     void fetchData();
+    return () => {
+      active = false;
+    };
   }, [data]);
 
   const hasMore = thanksList.length > MAX_VISIBLE;
   const displayList = expanded ? thanksList : thanksList.slice(0, MAX_VISIBLE);
 
   useEffect(() => {
-    const toFetch = thanksList.filter((p) => !p.avatar && p.wcaID?.length === 10);
-    for (const person of toFetch) {
-      void apiGetWCAPersonProfile(person.wcaID)
-        .then((res) => {
-          const url = res.person?.avatar?.thumb_url;
-          if (url) {
-            setAvatarCache((prev) => ({ ...prev, [person.wcaID]: url }));
-          }
-        })
-        .catch(() => {});
-    }
-  }, [thanksList]);
+    // Do not request avatars for sponsors hidden behind "Show more".
+    const ids = getAvatarFetchIds(
+      thanksList,
+      expanded,
+      MAX_VISIBLE,
+      requestedAvatarIds.current,
+    );
+    for (const id of ids) requestedAvatarIds.current.add(id);
+
+    // Serialize expansion batches so rapid toggles cannot exceed four concurrent requests.
+    avatarRequestQueue.current = avatarRequestQueue.current.then(() => fetchAvatarThumbnails(
+      ids,
+      async (wcaID) => {
+        const res = await apiGetWCAPersonProfile(wcaID);
+        return res.person?.avatar?.thumb_url;
+      },
+      (wcaID, url) => {
+        setAvatarCache((prev) => ({ ...prev, [wcaID]: url }));
+      },
+    ));
+  }, [thanksList, expanded]);
 
   if (loading || thanksList.length === 0) return null;
 
@@ -102,7 +118,7 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
         <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap="4">
           {displayList.map((person, index) => (
             <Card.Root
-              key={hasValidWcaId(person.wcaID) ? person.wcaID : `anon-${index}`}
+              key={isValidWcaId(person.wcaID) ? person.wcaID : `anon-${index}`}
               variant="outline"
               borderRadius="lg"
             >
@@ -112,7 +128,7 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
                   <Avatar.Fallback name={person.nickname} />
                 </Avatar.Root>
                 <VStack gap="0" textAlign="center">
-                  {hasValidWcaId(person.wcaID) ? (
+                  {isValidWcaId(person.wcaID) ? (
                     <Link asChild color="accent" fontWeight="medium" fontSize="sm">
                       <NextLink href={`/wca/player/${person.wcaID}`}>{person.nickname}</NextLink>
                     </Link>
@@ -121,7 +137,7 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
                       {person.nickname}
                     </Text>
                   )}
-                  {hasValidWcaId(person.wcaID) && (
+                  {isValidWcaId(person.wcaID) && (
                     <Text fontSize="2xs" color="fg.muted">
                       {person.wcaID}
                     </Text>
