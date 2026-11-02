@@ -64,3 +64,30 @@ test("mobile: localized skip link is keyboard-accessible", async () => {
     await page.close();
   }
 });
+
+test("no JavaScript: native skip link still reaches the main landmark", async () => {
+  const page = await browser.newPage({
+    viewport: { width: 1280, height: 800 },
+    javaScriptEnabled: false,
+  });
+  try {
+    await page.goto(`${baseUrl}/welcome`, { waitUntil: "domcontentloaded" });
+    const skip = page.locator('a[href="#main-content"]');
+    assert.equal(await skip.count(), 1, "Skip link must be present in server-rendered HTML");
+    assert.equal(await page.locator("main#main-content").count(), 1);
+
+    await page.keyboard.press("Tab");
+    assert.equal(await skip.evaluate((element) => document.activeElement === element), true);
+    assert.equal(await skip.isVisible(), true);
+
+    await page.keyboard.press("Enter");
+    await page.waitForURL(/#main-content$/);
+    assert.equal(
+      await page.locator("main#main-content").evaluate((element) => document.activeElement === element),
+      true,
+      "Native fragment navigation should focus the main landmark without hydration",
+    );
+  } finally {
+    await page.close();
+  }
+});
