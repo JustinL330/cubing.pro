@@ -57,17 +57,25 @@ export function ThanksSection({ data }: { data?: Thank[] }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // A slower previous request must not replace a newer data prop or update
+    // state after this section unmounts.
+    let active = true;
     const fetchData = async () => {
       try {
         const list = data ?? (await getAcknowledgments());
+        if (!active) return;
         setThanksList(list.map(thankToThanksPerson));
       } catch {
+        if (!active) return;
         setThanksList([]);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     void fetchData();
+    return () => {
+      active = false;
+    };
   }, [data]);
 
   const hasMore = thanksList.length > MAX_VISIBLE;
