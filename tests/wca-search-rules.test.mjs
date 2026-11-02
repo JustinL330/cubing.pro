@@ -1,6 +1,7 @@
 // Run with: node --experimental-strip-types --test tests/wca-search-rules.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import {
   filterWcaSearchResults,
@@ -52,4 +53,16 @@ test("country labels use active interface language with safe fallback", () => {
   assert.equal(getWcaSearchCountryLabel("JP", "Japan", "ja-JP"), "日本");
   assert.equal(getWcaSearchCountryLabel(undefined, "China", "en-US"), "China");
   assert.equal(getWcaSearchCountryLabel("ZZ", "Unknown region", "en-US"), "Unknown region");
+});
+
+
+test("confirmed search results are all visible without table pagination", () => {
+  const view = readFileSync(
+    new URL("../src/views/Wca/WcaPlayersSearchView.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(view, /dataSource=\{visible\}/);
+  assert.match(view, /pagination=\{false\}/);
+  assert.equal(getVisibleWcaSearchResults(players(100), false).length, 20);
+  assert.equal(getVisibleWcaSearchResults(players(100), true).length, 100);
 });
