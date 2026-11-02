@@ -108,3 +108,14 @@ test("malformed sponsor WCA IDs are neither fetched nor linked", () => {
   assert.match(section, /isValidWcaId\(person\.wcaID\)/);
   assert.doesNotMatch(section, /wcaID\.length === 10/);
 });
+
+test("acknowledgments effect ignores responses from an unmounted or replaced dataset", () => {
+  const component = readFileSync(new URL("../src/views/Welcome/ThanksSection.tsx", import.meta.url), "utf8");
+  const effect = component.match(/useEffect\(\(\) => \{([\s\S]*?)\}, \[data\]\);/)?.[1];
+  assert.ok(effect, "acknowledgments effect must depend on the current data prop");
+  assert.match(effect, /let active = true;/);
+  assert.match(effect, /const list = data \?\? \(await getAcknowledgments\(\)\);\s*if \(!active\) return;\s*setThanksList/);
+  assert.match(effect, /catch \{\s*if \(!active\) return;\s*setThanksList\(\[\]\)/);
+  assert.match(effect, /finally \{\s*if \(active\) setLoading\(false\)/);
+  assert.match(effect, /return \(\) => \{\s*active = false;/);
+});
