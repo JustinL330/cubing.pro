@@ -1,15 +1,14 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { AppShell } from "@/components/layout/AppShell";
 import { ExportPathMarker } from "@/components/routing/ExportPathMarker";
+import { homepageMetadata } from "@/lib/homepageMetadata";
 import { WelcomePageView } from "@/views/Welcome/WelcomePageView";
+import { WelcomeLoadingFallback } from "@/components/pages/WelcomeLoadingFallback";
 
 export const dynamic = "force-static";
 
-export const metadata: Metadata = {
-  title: "欢迎",
-};
+export const metadata = homepageMetadata;
 
 /**
  * 静态导出时根路径直接渲染欢迎页，避免 `redirect("/welcome")` 写入
@@ -21,7 +20,7 @@ export default function HomePage() {
     <>
       <ExportPathMarker path="/" />
       <AppShell>
-        <Suspense fallback={null}>
+        <Suspense fallback={<WelcomeLoadingFallback />}>
           <WelcomePageView />
         </Suspense>
       </AppShell>
