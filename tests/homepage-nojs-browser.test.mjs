@@ -55,7 +55,12 @@ test("both welcome URLs expose readable navigation without JavaScript on desktop
             assert.equal(await noScriptNote.getAttribute("lang"), "zh-CN", `${label}: no-JS notice lacks Chinese language marker`);
 
             const nav = page.locator("main nav");
-            assert.equal(await nav.getAttribute("aria-label"), "常用工具 / Popular tools", `${label}: navigation lacks bilingual accessible name`);
+            assert.equal(await nav.getAttribute("aria-labelledby"), "welcome-tools-heading", `${label}: navigation must use its bilingual heading as accessible name`);
+            const toolsHeading = nav.getByRole("heading", { level: 2, name: "常用工具 / Popular tools" });
+            assert.equal(await toolsHeading.isVisible(), true, `${label}: bilingual navigation heading not visible`);
+            assert.equal(await toolsHeading.locator('span[lang="zh-CN"]').innerText(), "常用工具", `${label}: Chinese navigation heading lacks its language marker`);
+            assert.equal(await toolsHeading.locator('span[lang="en"]').innerText(), "Popular tools", `${label}: English navigation heading lacks its language marker`);
+            assert.equal(await page.getByRole("navigation", { name: "常用工具 / Popular tools" }).count(), 1, `${label}: navigation accessible name not exposed`);
             for (const href of ["/timer", "/algs", "/wca/players"]) {
               const link = nav.locator(`a[href="${href}"], a[href="${href}/"]`);
               assert.equal(await link.count(), 1, `${label}: expected one link to ${href}`);
