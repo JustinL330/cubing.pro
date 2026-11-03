@@ -19,7 +19,10 @@ export function WelcomeLoadingFallback() {
         Practice with a cube timer and scrambles, browse WCA competitors and
         events, and find algorithms. This is not an official WCA website.
       </p>
-      <nav aria-label="常用工具 / Popular tools">
+      <nav aria-labelledby="welcome-tools-heading">
+        <h2 id="welcome-tools-heading">
+          <span lang="zh-CN">常用工具</span> / <span lang="en">Popular tools</span>
+        </h2>
         <ul>
           <li><Link href="/timer"><span lang="zh-CN">魔方计时器</span> / <span lang="en">Cube timer</span></Link></li>
           <li><Link href="/algs"><span lang="zh-CN">魔方公式</span> / <span lang="en">Algorithms</span></Link></li>
