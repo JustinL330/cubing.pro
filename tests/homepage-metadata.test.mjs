@@ -54,7 +54,10 @@ test("server fallback is bilingual and explains no-JavaScript limitations", () =
   assert.match(fallback, /<noscript>/);
   assert.match(fallback, /互动工具需要 JavaScript/);
   assert.match(fallback, /Interactive tools require JavaScript/);
-  assert.match(fallback, /aria-label="常用工具 \/ Popular tools"/);
+  assert.match(fallback, /<nav aria-labelledby="welcome-tools-heading">/);
+  assert.match(fallback, /<h2 id="welcome-tools-heading">/);
+  assert.match(fallback, /<span lang="zh-CN">常用工具<\/span>/);
+  assert.match(fallback, /<span lang="en">Popular tools<\/span>/);
   for (const label of ["Cube timer", "Algorithms", "Player search"]) {
     assert.ok(
       fallback.includes(`<span lang="en">${label}</span>`),
